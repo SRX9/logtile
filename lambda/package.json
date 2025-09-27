@@ -1,0 +1,37 @@
+{
+  "name": "changelog-lambda-function",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild index.ts --bundle --platform=node --target=node20 --outfile=index.js",
+    "dev": "esbuild index.ts --bundle --platform=node --target=node20 --outfile=index.js --watch",
+    "invoke": "node -e \"(async()=>{const {handler}=require('./index.js');const resp=await handler({ jobId: '77bbf518-1d94-4c62-8421-19ef2f59e631' });console.log(resp);})();\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.150",
+    "@types/pg": "^8.11.6",
+    "esbuild": "^0.25.5"
+  },
+  "dependencies": {
+    "@aws-sdk/client-scheduler": "^3.676.0",
+    "@azure/identity": "^4.11.1",
+    "@google/genai": "^1.6.0",
+    "@mendable/firecrawl-js": "^4.1.0",
+    "@mozilla/readability": "^0.6.0",
+    "@types/node": "^24.5.2",
+    "@upstash/redis": "^1.35.3",
+    "axios": "^1.12.2",
+    "p-retry": "^6.2.0",
+    "dotenv": "^16.4.5",
+    "expo-server-sdk": "^3.7.0",
+    "jsonrepair": "^3.12.0",
+    "linkedom": "^0.18.11",
+    "openai": "^5.7.0",
+    "pg": "^8.12.0"
+  }
+}

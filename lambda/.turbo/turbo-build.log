@@ -1,0 +1,5 @@
+[?9001h[?1004h[?25l[2J[m[H]0;npm[?25h]0;npm run build[?25l
+> watcher-lambda-function@1.0.0 build
+> esbuild index.ts --bundle --platform=node --target=node20 --outfile=index.js[6;1H[?25h[K]0;C:\WINDOWS\system32\cmd.exe 
+  [?25l[38;5;15mindex.js  [38;5;3m4.1mb[38;5;2m[9;1HDone in 130ms[?25h[m
+[K[?9001l[?1004l
