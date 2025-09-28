@@ -52,10 +52,10 @@ async function getSessionUser(req: NextRequest) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { repoId?: string } }
+  { params }: { params: Promise<{ repoId?: string }> }
 ) {
   try {
-    const repoId = params?.repoId;
+    const { repoId } = await params;
 
     if (!repoId) {
       return NextResponse.json(

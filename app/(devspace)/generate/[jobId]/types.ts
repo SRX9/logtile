@@ -24,8 +24,16 @@ export type FinalChangelogLogEntry = {
 
 export type FinalChangelogMetrics = Record<string, number | null | undefined>;
 
+export type ChangelogTitle = {
+  title: string;
+  version_number?: string;
+  date: string;
+};
+
 export type FinalChangelogResult = {
   markdown?: string | null;
+  changelog_title?: ChangelogTitle | null;
+  changelogTitle?: ChangelogTitle | null;
   logs?: FinalChangelogLogEntry[] | null;
   metrics?: FinalChangelogMetrics | null;
 } | null;
@@ -43,4 +51,5 @@ export type JobDetails = {
   created_at: string;
   updated_at: string;
   final_changelog_result?: FinalChangelogResult | string;
+  changelog_title?: ChangelogTitle | null;
 };

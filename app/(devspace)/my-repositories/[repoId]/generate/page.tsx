@@ -637,7 +637,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-6 space-y-8">
+    <div className="max-w-4xl  py-10 px-6 space-y-8">
       <RepositoryBreadcrumbs
         items={[
           { label: "Repositories", href: "/my-repositories" },
@@ -795,7 +795,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                                   href={comparisonSummary.htmlUrl}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="text-primary-600 underline-offset-2 hover:underline dark:text-primary-400"
+                                  className="text-primary-600 underline-offset-2 hover:underline dark:text-primary-200"
                                 >
                                   View comparison on GitHub
                                 </a>
@@ -905,7 +905,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                           href={comparisonSummary.htmlUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-400"
+                          className="text-xs font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-200"
                         >
                           View comparison on GitHub
                         </a>
@@ -948,7 +948,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                 Select Date Range
               </ModalHeader>
               <ModalBody>
-                <div className="flex justify-center mx-auto py-10">
+                <div className="flex justify-center  py-10">
                   <RangeCalendar
                     aria-label="Select date range"
                     value={dateRange ?? undefined}
@@ -1055,7 +1055,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                                 href={commit.htmlUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-xs font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-400"
+                                className="text-xs font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-200"
                               >
                                 View on GitHub
                               </a>
@@ -1157,7 +1157,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                                     href={commit.htmlUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                                    className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-200 dark:hover:text-primary-100"
                                   >
                                     View on GitHub
                                   </a>

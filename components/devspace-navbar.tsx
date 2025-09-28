@@ -21,7 +21,6 @@ import { useTheme } from "next-themes";
 
 export function DevspaceNavbar() {
   const { user, signOutUser } = useUser();
-  const { theme, setTheme } = useTheme();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -60,21 +59,6 @@ export function DevspaceNavbar() {
 
       <NavbarContent justify="end" className="items-center gap-2">
         <NavbarItem>
-          <Button
-            isIconOnly
-            variant="light"
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="w-9 h-9"
-          >
-            {theme === "light" ? (
-              <MoonFilledIcon size={18} />
-            ) : (
-              <SunFilledIcon size={18} />
-            )}
-          </Button>
-        </NavbarItem>
-
-        <NavbarItem>
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
               <Avatar
@@ -112,6 +96,7 @@ export function DevspaceSidebar() {
   const { user, signOutUser } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
 
   const menuItems = [
     {
@@ -193,7 +178,21 @@ export function DevspaceSidebar() {
       </nav>
 
       {/* User Profile Section - Fixed at bottom */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800 mt-auto">
+      <div className="p-4 border-t border-slate-200 dark:border-slate-800 mt-auto flex flex-col gap-4">
+        <Button
+          isIconOnly
+          variant="light"
+          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          className="w-full h-10 border flex justify-between px-3 border-slate-200 dark:border-slate-700"
+        >
+          Switch to {theme === "light" ? "Dark" : "Light"} Mode
+          {theme === "light" ? (
+            <MoonFilledIcon size={20} />
+          ) : (
+            <SunFilledIcon size={20} />
+          )}
+        </Button>
+
         <Dropdown placement="top-start">
           <DropdownTrigger>
             <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">

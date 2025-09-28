@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Avatar } from "@heroui/avatar";
@@ -8,77 +8,25 @@ import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Chip } from "@heroui/chip";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 
 import { RepositoryBreadcrumbs } from "@/components/repository-breadcrumbs";
 
-type Repository = {
-  id: string;
-  repo_id: string;
-  name: string;
-  owner: string;
-  full_name: string;
-  description: string | null;
-  html_url: string;
-  default_branch: string | null;
-  visibility: string | null;
-  connected_at: string;
-};
-
-type GithubDetails = {
-  full_name: string;
-  description: string | null;
-  stargazers_count: number;
-  forks_count: number;
-  watchers_count: number;
-  subscribers_count: number;
-  open_issues_count: number;
-  topics: string[];
-  language: string | null;
-  license: { name: string } | null;
-  archived: boolean;
-  disabled: boolean;
-  created_at: string;
-  updated_at: string;
-  pushed_at: string;
-  default_branch?: string;
-  owner: {
-    login: string;
-    avatar_url?: string;
-    html_url?: string;
-  };
-};
-
-type ApiResponse = {
-  repository: Repository;
-  details: GithubDetails | null;
-  changelogs: unknown[];
-  warning?: string;
-  error?: string;
-};
-
-function formatDate(date: string | null | undefined) {
-  if (!date) {
-    return "-";
-  }
-
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) {
-    return date;
-  }
-
-  return parsed.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { ApiResponse, RepositoryChangelogResponse } from "./types";
+import { RecentChangelogs } from "./components/RecentChangelogs";
+import { buildDateRangeLabel, formatDate } from "./utils/date";
+import { GitBranchIcon } from "lucide-react";
 
 export default function RepositoryDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { repoId } = params as { repoId?: string };
   const [data, setData] = useState<ApiResponse | null>(null);
+  const [isChangelogLoading, setChangelogLoading] = useState(false);
+  const [changelogError, setChangelogError] = useState<string | null>(null);
+  const [changelogFeed, setChangelogFeed] =
+    useState<RepositoryChangelogResponse | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const activeRequestRef = useRef<{
@@ -86,6 +34,7 @@ export default function RepositoryDetailsPage() {
     controller: AbortController;
     promise: Promise<ApiResponse>;
   } | null>(null);
+  const activeChangelogRequest = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!repoId) {
@@ -177,6 +126,124 @@ export default function RepositoryDetailsPage() {
   const details = data?.details;
   const repository = data?.repository;
 
+  const loadChangelogs = useCallback(
+    async ({ cursor, append }: { cursor?: string; append?: boolean } = {}) => {
+      if (!repoId) {
+        return;
+      }
+
+      if (activeChangelogRequest.current) {
+        activeChangelogRequest.current.abort();
+        activeChangelogRequest.current = null;
+      }
+
+      const controller = new AbortController();
+      activeChangelogRequest.current = controller;
+
+      if (append) {
+        setIsLoadingMore(true);
+      } else {
+        setChangelogLoading(true);
+        setChangelogError(null);
+        if (!cursor) {
+          setChangelogFeed(null);
+        }
+      }
+
+      try {
+        const params = new URLSearchParams();
+        params.set("limit", "10");
+        if (cursor) {
+          params.set("cursor", cursor);
+        }
+
+        const queryString = params.toString();
+        const endpoint = queryString
+          ? `/api/repositories/${repoId}/changelogs?${queryString}`
+          : `/api/repositories/${repoId}/changelogs`;
+
+        const response = await fetch(endpoint, {
+          signal: controller.signal,
+        });
+
+        const payload = (await response.json()) as
+          | RepositoryChangelogResponse
+          | { error?: string };
+
+        if (!response.ok || !payload || !("changelogs" in payload)) {
+          // payload may not have 'error' property, so check before accessing
+          const errorMsg =
+            typeof payload === "object" &&
+            payload !== null &&
+            "error" in payload &&
+            typeof (payload as any).error === "string"
+              ? (payload as any).error
+              : "Failed to load changelogs";
+          throw new Error(errorMsg);
+        }
+
+        setChangelogFeed((prev) => {
+          if (append && prev) {
+            return {
+              changelogs: [...prev.changelogs, ...payload.changelogs],
+              pagination: payload.pagination,
+            };
+          }
+
+          return payload;
+        });
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+
+        setChangelogError(
+          err instanceof Error ? err.message : "Failed to load changelogs"
+        );
+      } finally {
+        if (activeChangelogRequest.current === controller) {
+          activeChangelogRequest.current = null;
+        }
+
+        if (append) {
+          setIsLoadingMore(false);
+        } else {
+          setChangelogLoading(false);
+        }
+      }
+    },
+    [repoId]
+  );
+
+  const loadMoreChangelogs = useCallback(async () => {
+    if (
+      !changelogFeed?.pagination.hasMore ||
+      !changelogFeed.pagination.nextCursor
+    ) {
+      return;
+    }
+
+    await loadChangelogs({
+      cursor: changelogFeed.pagination.nextCursor,
+      append: true,
+    });
+  }, [changelogFeed, loadChangelogs]);
+
+  useEffect(() => {
+    if (!repoId) {
+      return;
+    }
+
+    void loadChangelogs();
+
+    return () => {
+      if (activeChangelogRequest.current) {
+        activeChangelogRequest.current.abort();
+        activeChangelogRequest.current = null;
+      }
+    };
+  }, [repoId, loadChangelogs]);
+
   const activityStats = useMemo(() => {
     if (!details) {
       return [];
@@ -193,15 +260,101 @@ export default function RepositoryDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Spinner label="Loading repository details" />
+      <div className="w-full max-w-5xl space-y-10 px-8 py-8 ">
+        <Skeleton className="h-4 w-32 rounded-lg bg-slate-200/80 dark:bg-slate-700/80" />
+
+        <Card shadow="sm">
+          <CardBody className="space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-14 w-14 rounded-full bg-slate-200/80 dark:bg-slate-700/80" />
+                <div className="space-y-3">
+                  <Skeleton className="h-5 w-52 rounded-lg bg-slate-200/80 dark:bg-slate-700/80" />
+                  <Skeleton className="h-4 w-40 rounded-lg bg-slate-200/70 dark:bg-slate-700/70" />
+                </div>
+              </div>
+              <Skeleton className="h-10 w-36 rounded-lg bg-slate-200/70 dark:bg-slate-700/70" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-6 w-20 rounded-full bg-slate-200/60 dark:bg-slate-700/60"
+                />
+              ))}
+            </div>
+          </CardBody>
+        </Card>
+
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+          <Card shadow="sm">
+            <CardBody className="space-y-5">
+              <Skeleton className="h-5 w-48 rounded-lg bg-slate-200/80 dark:bg-slate-700/80" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="space-y-2">
+                    <Skeleton className="h-3 w-32 rounded-lg bg-slate-200/60 dark:bg-slate-700/60" />
+                    <Skeleton className="h-4 w-24 rounded-lg bg-slate-200/70 dark:bg-slate-700/70" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3">
+                <Skeleton className="h-3 w-24 rounded-lg bg-slate-200/60 dark:bg-slate-700/60" />
+                <div className="flex flex-wrap gap-2">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <Skeleton
+                      key={index}
+                      className="h-6 w-16 rounded-full bg-slate-200/60 dark:bg-slate-700/60"
+                    />
+                  ))}
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+          <Card shadow="sm">
+            <CardBody className="space-y-5">
+              <Skeleton className="h-5 w-32 rounded-lg bg-slate-200/80 dark:bg-slate-700/80" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="space-y-2 rounded-xl border border-slate-200/60 bg-slate-50/80 p-4 dark:border-slate-800/60 dark:bg-slate-900/40"
+                  >
+                    <Skeleton className="h-3 w-20 rounded-lg bg-slate-200/60 dark:bg-slate-700/60" />
+                    <Skeleton className="h-4 w-16 rounded-lg bg-slate-200/70 dark:bg-slate-700/70" />
+                  </div>
+                ))}
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-40 rounded-lg bg-slate-200/80 dark:bg-slate-700/80" />
+            <Skeleton className="h-4 w-64 rounded-lg bg-slate-200/70 dark:bg-slate-700/70" />
+          </div>
+          <Card shadow="sm">
+            <CardBody className="space-y-3 py-10 text-center">
+              <Skeleton className="mx-auto h-4 w-48 rounded-lg bg-slate-200/70 dark:bg-slate-700/70" />
+              <Skeleton className="mx-auto h-3 w-32 rounded-lg bg-slate-200/60 dark:bg-slate-700/60" />
+            </CardBody>
+          </Card>
+        </section>
+
+        <Divider />
+
+        <footer className="flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <Skeleton className="h-4 w-64 rounded-lg bg-slate-200/70 dark:bg-slate-700/70" />
+          <Skeleton className="h-4 w-52 rounded-lg bg-slate-200/70 dark:bg-slate-700/70" />
+        </footer>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto py-10 px-6">
+      <div className="max-w-4xl  py-10 px-6">
         <Card className="border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
           <CardBody className="space-y-4">
             <div className="text-sm text-red-600 dark:text-red-300">
@@ -221,9 +374,9 @@ export default function RepositoryDetailsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-10 px-6 space-y-10">
+    <div className="w-full max-w-5xl space-y-8 px-8 py-8 pb-40">
       <RepositoryBreadcrumbs
-        className="text-xs"
+        className="text-xs text-slate-500 dark:text-slate-400"
         items={[
           { label: "Repositories", href: "/my-repositories" },
           {
@@ -233,78 +386,84 @@ export default function RepositoryDetailsPage() {
         ]}
       />
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <Avatar
-              size="lg"
-              src={details?.owner.avatar_url}
-              name={repository.owner}
-              className="border border-slate-200 dark:border-slate-700"
-            />
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                {repository.full_name}
-              </h1>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Connected {formatDate(repository.connected_at)} • Default
-                branch: {repository.default_branch ?? "n/a"}
-              </p>
+      <Card shadow="sm">
+        <CardBody className="space-y-6">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-4">
+              <Avatar
+                size="lg"
+                src={details?.owner.avatar_url}
+                name={repository.owner}
+                className="border border-slate-200 dark:border-slate-700"
+              />
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                    {repository.full_name}
+                  </h1>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Connected {formatDate(repository.connected_at)}
+                  </p>
+                </div>
+                {repository.description && (
+                  <p className="max-w-3xl text-sm text-slate-700 dark:text-slate-300">
+                    {repository.description}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <Chip size="sm" variant="flat" color="default">
+                    {repository.visibility ?? "unknown"}
+                  </Chip>
+                  <Chip size="sm" variant="flat" color="default">
+                    <div className="flex items-center gap-1 px-1">
+                      <GitBranchIcon className="w-4 h-4" />{" "}
+                      {repository.default_branch ?? "n/a"}
+                    </div>
+                  </Chip>
+                  {details?.archived && (
+                    <Chip size="sm" variant="flat" color="warning">
+                      Archived
+                    </Chip>
+                  )}
+                  {details?.disabled && (
+                    <Chip size="sm" variant="flat" color="danger">
+                      Disabled
+                    </Chip>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-start gap-2 justify-between h-full sm:items-end">
+              <Button
+                color="primary"
+                variant="solid"
+                onPress={() =>
+                  router.push(`/my-repositories/${repository.repo_id}/generate`)
+                }
+              >
+                Generate changelog
+              </Button>
             </div>
           </div>
-          {repository.description && (
-            <p className="text-base text-slate-700 dark:text-slate-300 max-w-3xl">
-              {repository.description}
-            </p>
-          )}
-          <div className="flex gap-2 text-xs uppercase tracking-wider">
-            <Chip size="sm" variant="flat" color="primary">
-              {repository.visibility ?? "unknown"}
-            </Chip>
-            {details?.archived && (
-              <Chip size="sm" variant="shadow" color="warning">
-                Archived
-              </Chip>
-            )}
-            {details?.disabled && (
-              <Chip size="sm" variant="shadow" color="danger">
-                Disabled
-              </Chip>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-col gap-3 items-start">
-          <Button
-            color="primary"
-            variant="solid"
-            onPress={() =>
-              router.push(`/my-repositories/${repository.repo_id}/generate`)
-            }
-          >
-            Generate Now
-          </Button>
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            Generate a changelog summary for recent activity.
-          </div>
-        </div>
-      </div>
+        </CardBody>
+      </Card>
 
       {details && (
-        <section className="grid gap-6 md:grid-cols-[1.3fr_1fr]">
-          <Card className="border border-slate-200 dark:border-slate-800 p-3">
-            <CardBody className="space-y-4">
+        <section className="grid gap-6 -mt-3 md:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
+          <Card className="p-3 " shadow="sm">
+            <CardBody className="space-y-5">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  Repository Overview
+                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Repository overview
                 </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Insights pulled live from GitHub.
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  Key meta pulled live from GitHub.
                 </p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Primary language
                   </p>
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -312,7 +471,7 @@ export default function RepositoryDetailsPage() {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     License
                   </p>
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -320,7 +479,7 @@ export default function RepositoryDetailsPage() {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Created
                   </p>
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -328,7 +487,7 @@ export default function RepositoryDetailsPage() {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Last pushed
                   </p>
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -336,7 +495,7 @@ export default function RepositoryDetailsPage() {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Last updated
                   </p>
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -344,7 +503,7 @@ export default function RepositoryDetailsPage() {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Default branch
                   </p>
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -357,7 +516,7 @@ export default function RepositoryDetailsPage() {
 
               {!!details.topics?.length && (
                 <div className="space-y-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Topics
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -371,60 +530,78 @@ export default function RepositoryDetailsPage() {
               )}
             </CardBody>
           </Card>
+
+          {!!activityStats.length && (
+            <Card className="p-3 " shadow="sm">
+              <CardBody className="space-y-5">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                    Activity snapshot
+                  </h2>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Latest numbers from GitHub.
+                  </p>
+                </div>
+                <div className="grid gap-3">
+                  {activityStats.map(({ label, value }) => (
+                    <div
+                      key={label}
+                      className="flex items-baseline justify-between rounded-lg border border-slate-200/70 bg-slate-50/80 px-4 py-3 text-sm dark:border-slate-800/60 dark:bg-slate-900/40"
+                    >
+                      <span className="text-slate-600 dark:text-slate-400">
+                        {label}
+                      </span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">
+                        {value.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
+          )}
         </section>
       )}
 
-      <section className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              Recent Changelogs
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Summaries of what's been shipped. Coming soon.
-            </p>
-          </div>
-          <Button color="primary" variant="flat" isDisabled>
-            View All
-          </Button>
-        </div>
-        <Card className="border border-dashed border-slate-300 dark:border-slate-700">
-          <CardBody className="flex flex-col items-center gap-2 py-10 text-sm text-slate-600 dark:text-slate-400">
-            <span className="font-medium text-slate-700 dark:text-slate-300">
-              No changelog entries yet.
-            </span>
-            <span>Generate a changelog to see updates here.</span>
-          </CardBody>
-        </Card>
-      </section>
+      <RecentChangelogs
+        changelogFeed={changelogFeed}
+        isChangelogLoading={isChangelogLoading}
+        changelogError={changelogError}
+        isLoadingMore={isLoadingMore}
+        onViewAll={() =>
+          router.push(`/my-changelogs?repo=${repository.repo_id}`)
+        }
+        onRetry={loadChangelogs}
+        onLoadMore={loadMoreChangelogs}
+      />
 
       {data?.warning && (
-        <Card className="border border-amber-200 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-900/20">
+        <Card className="border border-amber-200/70 bg-amber-50/80 dark:border-amber-900/60 dark:bg-amber-900/20">
           <CardBody className="text-sm text-amber-800 dark:text-amber-200">
             {data.warning}
           </CardBody>
         </Card>
       )}
 
-      <Divider />
+      <Divider className="border-slate-200/80 dark:border-slate-800/60" />
 
-      <footer className="flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400 md:flex-row md:items-center md:justify-between">
-        <div>Connected via Logtiles • Repo ID: {repository.repo_id}</div>
-        <div className="flex gap-3">
+      <footer className="flex flex-col gap-2 text-sm text-slate-500 dark:text-slate-400 sm:flex-row sm:items-center pb-40 sm:justify-between">
+        <span>Connected via Logtiles • Repo ID: {repository.repo_id}</span>
+        <div className="flex flex-wrap gap-3">
           <Link
             href={repository.html_url}
             target="_blank"
-            className="hover:underline"
+            className="hover:text-primary-500"
           >
-            GitHub Repository
+            GitHub repository
           </Link>
           {details?.owner?.html_url && (
             <Link
               href={details.owner.html_url}
               target="_blank"
-              className="hover:underline"
+              className="hover:text-primary-500"
             >
-              Owner Profile
+              Owner profile
             </Link>
           )}
         </div>

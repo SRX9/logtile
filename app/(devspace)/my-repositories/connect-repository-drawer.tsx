@@ -231,7 +231,7 @@ export function RepositoryConnectDrawer({
                       href={repo.htmlUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-medium text-primary-600 hover:underline"
+                      className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-200 dark:hover:text-primary-100"
                     >
                       View on GitHub
                     </a>

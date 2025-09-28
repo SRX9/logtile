@@ -7,7 +7,7 @@ import type { JobDetails } from "../types";
 
 type JobHeaderProps = {
   jobId: string;
-  job: JobDetails;
+  job: Pick<JobDetails, "status" | "repo_full_name">;
 };
 
 export function JobHeader({ jobId, job }: JobHeaderProps) {

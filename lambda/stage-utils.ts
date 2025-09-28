@@ -60,6 +60,7 @@ export function buildOutputData(
     stage4: stage4Result
       ? {
           markdown: stage4Result.markdown,
+          changelogTitle: stage4Result.changelogTitle,
           metrics: stage4Result.metrics,
         }
       : undefined,
@@ -145,6 +146,16 @@ export async function saveOutputAndFinal(
   await query(
     "UPDATE changelog_job SET stage_result = $2::jsonb, final_changelog_result = $3::jsonb, updated_at = NOW() WHERE id = $1",
     [jobId, JSON.stringify(outputData), JSON.stringify(finalResult)]
+  );
+}
+
+export async function saveChangelogTitle(
+  jobId: string,
+  changelogTitle: { title: string; version_number?: string; date: string }
+) {
+  await query(
+    "UPDATE changelog_job SET changelog_title = $2::jsonb, updated_at = NOW() WHERE id = $1",
+    [jobId, JSON.stringify(changelogTitle)]
   );
 }
 

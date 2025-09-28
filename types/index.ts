@@ -38,4 +38,11 @@ export type ChangelogJobSummary = {
   created_at: string;
   updated_at: string;
   commit_count: number;
+  changelog_title?: {
+    title?: string;
+    subtitle?: string;
+    version?: string;
+    date?: string;
+    scope?: string;
+  } | null;
 };
