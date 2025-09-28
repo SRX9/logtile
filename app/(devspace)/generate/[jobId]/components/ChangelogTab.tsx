@@ -4,7 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@heroui/skeleton";
 
 import { FinalChangelog } from "./FinalChangelog";
-import type { ChangelogTitle, FinalChangelogMetrics } from "../types";
+import type {
+  ChangelogTitle,
+  FinalChangelogMetrics,
+  JobStatus,
+} from "../types";
 
 type ChangelogApiResponse = {
   status: "pending" | "processing" | "completed" | "failed";
@@ -13,7 +17,13 @@ type ChangelogApiResponse = {
   title: ChangelogTitle | null;
 };
 
-export function ChangelogTab({ jobId }: { jobId: string }) {
+export function ChangelogTab({
+  jobId,
+  onStatusChange,
+}: {
+  jobId: string;
+  onStatusChange?: (nextStatus: JobStatus) => void;
+}) {
   const [data, setData] = useState<ChangelogApiResponse | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const didInitRef = useRef(false);
@@ -25,6 +35,7 @@ export function ChangelogTab({ jobId }: { jobId: string }) {
     if (fetchPromiseRef.current) {
       const d = await fetchPromiseRef.current;
       setData(d);
+      onStatusChange?.(d.status);
       return d;
     }
     const promise = (async () => {
@@ -36,11 +47,12 @@ export function ChangelogTab({ jobId }: { jobId: string }) {
     try {
       const d = await promise;
       setData(d);
+      onStatusChange?.(d.status);
       return d;
     } finally {
       fetchPromiseRef.current = null;
     }
-  }, [jobId]);
+  }, [jobId, onStatusChange]);
 
   useEffect(() => {
     if (didInitRef.current) return;

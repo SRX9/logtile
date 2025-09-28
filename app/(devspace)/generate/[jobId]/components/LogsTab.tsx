@@ -3,14 +3,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ProgressAndLogs } from "./ProgressAndLogs";
-import type { JobLogEntry } from "../types";
+import type { JobLogEntry, JobStatus } from "../types";
 
 type LogsApiResponse = {
   status: "pending" | "processing" | "completed" | "failed";
   logs: string[];
 };
 
-export function LogsTab({ jobId }: { jobId: string }) {
+export function LogsTab({
+  jobId,
+  onStatusChange,
+}: {
+  jobId: string;
+  onStatusChange?: (nextStatus: JobStatus) => void;
+}) {
   const [status, setStatus] = useState<LogsApiResponse["status"]>("pending");
   const [rawLogs, setRawLogs] = useState<string[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -93,11 +99,12 @@ export function LogsTab({ jobId }: { jobId: string }) {
       const data = await promise;
       setStatus(data.status);
       setRawLogs(data.logs ?? []);
+      onStatusChange?.(data.status);
       return data;
     } finally {
       fetchPromiseRef.current = null;
     }
-  }, [jobId]);
+  }, [jobId, onStatusChange]);
 
   useEffect(() => {
     if (didInitRef.current) return;

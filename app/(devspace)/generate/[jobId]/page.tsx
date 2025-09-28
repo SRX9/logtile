@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { notFound } from "next/navigation";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Skeleton } from "@heroui/skeleton";
@@ -9,6 +9,7 @@ import { JobHeader } from "./components/JobHeader";
 import { ChangelogTab } from "./components/ChangelogTab";
 import { OverviewTab } from "./components/OverviewTab";
 import { LogsTab } from "./components/LogsTab";
+import type { JobStatus } from "./types";
 
 type GenerateJobPageProps = {
   params: Promise<{
@@ -20,8 +21,9 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
   const [jobId, setJobId] = useState<string | null>(null);
   const [header, setHeader] = useState<{
     repo_full_name: string;
-    status: "pending" | "processing" | "completed" | "failed";
+    status: JobStatus;
   } | null>(null);
+  const latestStatusRef = useRef<JobStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeKey, setActiveKey] = useState<string>("changelog");
@@ -52,7 +54,12 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
         throw new Error(body?.error ?? "Failed to load job header");
       }
       const data = await response.json();
-      setHeader({ repo_full_name: data.repo_full_name, status: data.status });
+      const statusToUse = latestStatusRef.current ?? data.status;
+      latestStatusRef.current = statusToUse;
+      setHeader({
+        repo_full_name: data.repo_full_name,
+        status: statusToUse,
+      });
     } catch (err) {
       console.error("Failed to fetch header:", err);
       setError(
@@ -68,6 +75,19 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
       fetchHeader();
     }
   }, [jobId, fetchHeader]);
+
+  const handleStatusUpdate = useCallback((nextStatus: JobStatus) => {
+    latestStatusRef.current = nextStatus;
+    setHeader((prev) => {
+      if (!prev) {
+        return prev;
+      }
+      if (prev.status === nextStatus) {
+        return prev;
+      }
+      return { ...prev, status: nextStatus };
+    });
+  }, []);
 
   // All per-tab data is fetched inside tab components now
 
@@ -134,14 +154,16 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
         >
           <Tab key="changelog" title="Changelog" className="px-1 py-6">
             {activeKey === "changelog" && jobId && (
-              <ChangelogTab jobId={jobId} />
+              <ChangelogTab jobId={jobId} onStatusChange={handleStatusUpdate} />
             )}
           </Tab>
           <Tab key="overview" title="Overview" className="px-1 py-6">
             {activeKey === "overview" && jobId && <OverviewTab jobId={jobId} />}
           </Tab>
           <Tab key="logs" title="Logs" className="px-1 py-6">
-            {activeKey === "logs" && jobId && <LogsTab jobId={jobId} />}
+            {activeKey === "logs" && jobId && (
+              <LogsTab jobId={jobId} onStatusChange={handleStatusUpdate} />
+            )}
           </Tab>
         </Tabs>
       </div>

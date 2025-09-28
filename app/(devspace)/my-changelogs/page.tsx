@@ -1,22 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
-import { Spinner } from "@heroui/spinner";
 import { Button } from "@heroui/button";
 import { Skeleton } from "@heroui/skeleton";
-import { GithubIcon } from "@/components/icons";
 import {
   Clock,
   FileClock,
   Layers,
   ChevronRight,
-  RotateCw,
   CalendarRangeIcon,
   Tag,
 } from "lucide-react";
+
+import { GithubIcon } from "@/components/icons";
 import { ChangelogJobSummary } from "@/types";
 
 type ChangelogJobsResponse = {
@@ -51,6 +51,7 @@ export default function MyChangelogsPage() {
       }
 
       const data: ChangelogJobsResponse = await response.json();
+
       setJobs(data.jobs);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -124,9 +125,9 @@ export default function MyChangelogsPage() {
       <div className="flex flex-col items-center justify-center max-w-4xl mx-auto min-h-[400px] gap-4">
         <p className="text-red-500">Error: {error}</p>
         <Button
-          onPress={fetchJobs}
-          color="primary"
           className="dark:text-primary-100"
+          color="primary"
+          onPress={fetchJobs}
         >
           Try Again
         </Button>
@@ -161,9 +162,9 @@ export default function MyChangelogsPage() {
               Generate your first changelog from one of your repositories.
             </p>
             <Button
-              onClick={() => router.push("/my-repositories")}
               color="primary"
               endContent={<ChevronRight className="w-4 h-4" />}
+              onClick={() => router.push("/my-repositories")}
             >
               Go to Repositories
             </Button>
@@ -172,103 +173,96 @@ export default function MyChangelogsPage() {
       ) : (
         <div className="grid gap-4">
           {jobs.map((job) => (
-            <Card
+            <Link
               key={job.id}
-              className="p-2"
-              shadow="sm"
-              onClick={() => handleJobClick(job.id)}
-              tabIndex={0}
-              role="button"
               aria-label={`Open changelog job ${job.repo_full_name}`}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleJobClick(job.id);
-                }
-              }}
+              className="rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              href={`/generate/${job.id}`}
             >
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between w-full">
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className="h-9 w-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                      <GithubIcon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                          {job.changelog_title?.title ?? job.repo_full_name}
-                        </h3>
-                        {job.changelog_title?.version ? (
-                          <Chip size="sm" variant="flat" className="text-xs">
-                            {job.changelog_title.version}
-                          </Chip>
-                        ) : null}
+              <Card className="p-2" shadow="sm">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between w-full">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className="h-9 w-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <GithubIcon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {job.repo_full_name}
-                        {job.changelog_title?.subtitle ? (
-                          <span className="ml-2">
-                            • {job.changelog_title.subtitle}
-                          </span>
-                        ) : null}
-                      </p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-3 mt-1">
-                        <span className="inline-flex items-center gap-1">
-                          <Layers className="w-4 h-4" /> {job.commit_count}{" "}
-                          commits
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="w-4 h-4" /> Created{" "}
-                          {formatDate(job.created_at)}
-                        </span>
-                        {job.changelog_title?.scope ? (
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                            {job.changelog_title?.title ?? job.repo_full_name}
+                          </h3>
+                          {job.changelog_title?.version ? (
+                            <Chip className="text-xs" size="sm" variant="flat">
+                              {job.changelog_title.version}
+                            </Chip>
+                          ) : null}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {job.repo_full_name}
+                          {job.changelog_title?.subtitle ? (
+                            <span className="ml-2">
+                              • {job.changelog_title.subtitle}
+                            </span>
+                          ) : null}
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-3 mt-1">
                           <span className="inline-flex items-center gap-1">
-                            <Tag className="w-4 h-4" />{" "}
-                            {job.changelog_title.scope}
+                            <Layers className="w-4 h-4" /> {job.commit_count}{" "}
+                            commits
                           </span>
-                        ) : null}
-                        {job.changelog_title?.date ? (
                           <span className="inline-flex items-center gap-1">
-                            <CalendarRangeIcon className="w-4 h-4" />
-                            {new Date(
-                              job.changelog_title.date
-                            ).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            <Clock className="w-4 h-4" /> Created{" "}
+                            {formatDate(job.created_at)}
                           </span>
-                        ) : null}
-                      </p>
+                          {job.changelog_title?.scope ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Tag className="w-4 h-4" />{" "}
+                              {job.changelog_title.scope}
+                            </span>
+                          ) : null}
+                          {job.changelog_title?.date ? (
+                            <span className="inline-flex items-center gap-1">
+                              <CalendarRangeIcon className="w-4 h-4" />
+                              {new Date(
+                                job.changelog_title.date
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                          ) : null}
+                        </p>
+                      </div>
                     </div>
+                    <Chip
+                      className="capitalize"
+                      color={statusColorMap[job.status]}
+                      size="sm"
+                      variant="flat"
+                    >
+                      {job.status}
+                    </Chip>
                   </div>
-                  <Chip
-                    color={statusColorMap[job.status]}
-                    variant="flat"
-                    size="sm"
-                    className="capitalize"
-                  >
-                    {job.status}
-                  </Chip>
-                </div>
-              </CardHeader>
-              <CardBody className="pt-2">
-                <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-                  <span className="inline-flex items-center gap-2">
-                    <CalendarRangeIcon className="w-4 h-4" /> Updated{" "}
-                    {formatDate(job.updated_at)}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    onPress={() => handleJobClick(job.id)}
-                    endContent={<ChevronRight className="w-4 h-4" />}
-                  >
-                    View Details
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
+                </CardHeader>
+                <CardBody className="pt-2">
+                  <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+                    <span className="inline-flex items-center gap-2">
+                      <CalendarRangeIcon className="w-4 h-4" /> Updated{" "}
+                      {formatDate(job.updated_at)}
+                    </span>
+                    <Button
+                      endContent={<ChevronRight className="w-4 h-4" />}
+                      size="sm"
+                      variant="flat"
+                      onPress={() => handleJobClick(job.id)}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

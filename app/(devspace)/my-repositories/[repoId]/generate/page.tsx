@@ -1,5 +1,7 @@
 "use client";
 
+import type { RangeValue } from "@react-types/shared";
+
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { notFound } from "next/navigation";
 import { RangeCalendar, ScrollShadow } from "@heroui/react";
@@ -26,7 +28,7 @@ import {
   DateValue,
   getLocalTimeZone,
 } from "@internationalized/date";
-import type { RangeValue } from "@react-types/shared";
+
 import { RepositoryBreadcrumbs } from "@/components/repository-breadcrumbs";
 
 const RANGE_MODE_OPTIONS = [
@@ -113,6 +115,7 @@ function formatDateTime(iso: string | null | undefined) {
   }
 
   const parsed = new Date(iso);
+
   if (Number.isNaN(parsed.getTime())) {
     return iso;
   }
@@ -140,6 +143,7 @@ function isoStringToCalendarDate(iso: string | null | undefined) {
   }
 
   const parsed = new Date(iso);
+
   if (Number.isNaN(parsed.getTime())) {
     return null;
   }
@@ -207,15 +211,18 @@ function formatProcessingTimeFromCommits(commitCount: number) {
 
   if (totalSeconds < 60) {
     const roundedSeconds = Math.max(1, totalSeconds);
+
     return `${roundedSeconds} second${roundedSeconds === 1 ? "" : "s"}`;
   }
 
   const totalMinutes = Math.max(1, Math.round(totalSeconds / 60));
+
   if (totalMinutes < 60) {
     return `${totalMinutes} minute${totalMinutes === 1 ? "" : "s"}`;
   }
 
   const totalHours = Math.max(1, Math.round(totalMinutes / 60));
+
   return `${totalHours} hour${totalHours === 1 ? "" : "s"}`;
 }
 
@@ -246,12 +253,14 @@ function useGenerateOptions(repoId: string | undefined) {
 
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
+
           throw new Error(
             body?.error ?? "Failed to load repository generate options"
           );
         }
 
         const body = (await response.json()) as GenerateOptionsResponse;
+
         if (!cancelled) {
           setData(body);
         }
@@ -363,10 +372,12 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
         setCommitsError("Invalid date range");
         setCommitSummaries([]);
         setDeselectedCommitShas(new Set());
+
         return;
       }
 
       const currentRange = { since, until };
+
       activeFetchRangeRef.current = currentRange;
 
       if (
@@ -377,6 +388,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
       }
 
       const controller = new AbortController();
+
       activeFetchControllerRef.current = controller;
 
       setIsLoadingCommits(true);
@@ -392,6 +404,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
+
           throw new Error(body?.error ?? "Failed to load commits");
         }
 
@@ -506,6 +519,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
           activeFetchControllerRef.current = null;
         }
         activeFetchRangeRef.current = null;
+
         return;
       }
 
@@ -521,6 +535,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
     if (isLoadingCommits) {
       setIsCommitDrawerOpen(true);
+
       return;
     }
 
@@ -531,6 +546,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
       setCommitsError("Invalid date range");
       setCommitSummaries([]);
       setDeselectedCommitShas(new Set());
+
       return;
     }
 
@@ -559,11 +575,13 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
   const handleToggleCommit = useCallback((sha: string) => {
     setDeselectedCommitShas((prev) => {
       const next = new Set(prev);
+
       if (next.has(sha)) {
         next.delete(sha);
       } else {
         next.add(sha);
       }
+
       return next;
     });
   }, []);
@@ -579,9 +597,11 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
       }
 
       const all = new Set<string>();
+
       commitSummaries.forEach((commit) => {
         all.add(commit.sha);
       });
+
       return all;
     });
   }, [commitSummaries]);
@@ -624,6 +644,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
+
         throw new Error(body?.error ?? "Failed to create changelog job");
       }
 
@@ -704,13 +725,13 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                       <div className="flex items-center gap-3">
                         <Switch
                           aria-label={option.label}
+                          isDisabled={isSmart}
                           isSelected={isSelected}
                           onValueChange={(value) => {
                             if (!isSmart && value) {
                               handleRangeModeChange(option.id);
                             }
                           }}
-                          isDisabled={isSmart}
                         />
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -741,8 +762,8 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                           </p>
                           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <Button
-                              size="sm"
                               color="primary"
+                              size="sm"
                               onPress={() => setIsDateRangeModalOpen(true)}
                             >
                               {isDateRangeComplete
@@ -750,10 +771,10 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                                 : "Select Date Range"}
                             </Button>
                             <Button
-                              size="sm"
-                              variant="flat"
                               color="default"
                               isDisabled={!isDateRangeComplete}
+                              size="sm"
+                              variant="flat"
                               onPress={handleOpenCommitDrawer}
                             >
                               View commits
@@ -796,10 +817,10 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                               </p>
                               {comparisonSummary.htmlUrl && (
                                 <a
-                                  href={comparisonSummary.htmlUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
                                   className="text-primary-600 underline-offset-2 hover:underline dark:text-primary-200"
+                                  href={comparisonSummary.htmlUrl}
+                                  rel="noreferrer"
+                                  target="_blank"
                                 >
                                   View comparison on GitHub
                                 </a>
@@ -852,8 +873,8 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                     </p>
                     {isProcessingOverviewLoading ? (
                       <div className="mt-2 space-y-2">
-                        <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-                        <div className="h-3 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                        <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                        <div className="h-3 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
                       </div>
                     ) : (
                       <>
@@ -873,8 +894,8 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                     </p>
                     {isProcessingOverviewLoading ? (
                       <div className="mt-2 space-y-2">
-                        <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-                        <div className="h-3 w-36 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                        <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                        <div className="h-3 w-36 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
                       </div>
                     ) : (
                       <>
@@ -894,11 +915,11 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                     </p>
                     <div className="mt-2 flex flex-col gap-2">
                       <Button
+                        color="default"
+                        isDisabled={!isDateRangeComplete || isLoadingCommits}
                         size="sm"
                         variant="flat"
-                        color="default"
                         onPress={handleOpenCommitDrawer}
-                        isDisabled={!isDateRangeComplete || isLoadingCommits}
                       >
                         {isProcessingOverviewLoading
                           ? "Loading..."
@@ -906,10 +927,10 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                       </Button>
                       {comparisonSummary?.htmlUrl && (
                         <a
-                          href={comparisonSummary.htmlUrl}
-                          target="_blank"
-                          rel="noreferrer"
                           className="text-xs font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-200"
+                          href={comparisonSummary.htmlUrl}
+                          rel="noreferrer"
+                          target="_blank"
                         >
                           View comparison on GitHub
                         </a>
@@ -922,7 +943,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
           )}
 
           <div className="flex items-center justify-end gap-3">
-            <Button variant="flat" color="default" isDisabled>
+            <Button isDisabled color="default" variant="flat">
               Back
             </Button>
             <Button
@@ -942,8 +963,8 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
       <Modal
         isOpen={isDateRangeModalOpen}
-        onOpenChange={setIsDateRangeModalOpen}
         size="2xl"
+        onOpenChange={setIsDateRangeModalOpen}
       >
         <ModalContent>
           {(onClose) => (
@@ -956,13 +977,13 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                   <RangeCalendar
                     aria-label="Select date range"
                     value={dateRange ?? undefined}
-                    onChange={handleDateRangeChange}
                     visibleMonths={2}
+                    onChange={handleDateRangeChange}
                   />
                 </div>
               </ModalBody>
               <ModalFooter>
-                <Button variant="flat" color="default" onPress={onClose}>
+                <Button color="default" variant="flat" onPress={onClose}>
                   Cancel
                 </Button>
                 <Button
@@ -980,9 +1001,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
       <Drawer
         isOpen={isCommitDrawerOpen}
-        onClose={handleCloseCommitDrawer}
         placement="right"
         size="lg"
+        onClose={handleCloseCommitDrawer}
       >
         <DrawerContent>
           <DrawerHeader className="flex flex-col gap-1">
@@ -1026,6 +1047,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                 <ul className="space-y-3">
                   {commitSummaries.map((commit) => {
                     const isDeselected = deselectedCommitShas.has(commit.sha);
+
                     return (
                       <li
                         key={commit.sha}
@@ -1037,9 +1059,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                       >
                         <div className="flex items-start gap-3">
                           <Checkbox
+                            aria-label={`Include commit ${commit.sha}`}
                             isSelected={!isDeselected}
                             onValueChange={() => handleToggleCommit(commit.sha)}
-                            aria-label={`Include commit ${commit.sha}`}
                           />
                           <div className="space-y-1">
                             <p className="font-medium text-slate-900 dark:text-slate-100">
@@ -1056,10 +1078,10 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                             </p>
                             {commit.htmlUrl && (
                               <a
-                                href={commit.htmlUrl}
-                                target="_blank"
-                                rel="noreferrer"
                                 className="text-xs font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-200"
+                                href={commit.htmlUrl}
+                                rel="noreferrer"
+                                target="_blank"
                               >
                                 View on GitHub
                               </a>
@@ -1093,9 +1115,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
       <Modal
         isOpen={isConfirmationModalOpen}
-        onOpenChange={setIsConfirmationModalOpen}
-        size="2xl"
         scrollBehavior="inside"
+        size="2xl"
+        onOpenChange={setIsConfirmationModalOpen}
       >
         <ModalContent>
           {(onClose) => (
@@ -1158,10 +1180,10 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                                 </div>
                                 {commit.htmlUrl && (
                                   <a
-                                    href={commit.htmlUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
                                     className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-200 dark:hover:text-primary-100"
+                                    href={commit.htmlUrl}
+                                    rel="noreferrer"
+                                    target="_blank"
                                   >
                                     View on GitHub
                                   </a>
@@ -1180,7 +1202,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                       {estimatedProcessingTimeLabel}
                     </p>
                     <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                      This process will run in the background. You'll be
+                      This process will run in the background. You&apos;ll be
                       redirected to a status page where you can monitor
                       progress.
                     </p>
@@ -1189,18 +1211,18 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
               </ModalBody>
               <ModalFooter>
                 <Button
-                  variant="flat"
                   color="default"
-                  onPress={handleCloseConfirmationModal}
                   isDisabled={isCreatingJob}
+                  variant="flat"
+                  onPress={handleCloseConfirmationModal}
                 >
                   Cancel
                 </Button>
                 <Button
                   color="primary"
-                  onPress={handleConfirmGeneration}
-                  isLoading={isCreatingJob}
                   isDisabled={isCreatingJob || !selectedCommits.length}
+                  isLoading={isCreatingJob}
+                  onPress={handleConfirmGeneration}
                 >
                   {isCreatingJob ? "Creating Job..." : "Generate Changelog"}
                 </Button>
