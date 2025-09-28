@@ -62,6 +62,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "11.18.2",
     "intl-messageformat": "10.7.16",
+    "jsonrepair": "^3.13.1",
     "lucide-react": "^0.544.0",
     "next": "15.3.1",
     "next-themes": "0.4.6",
