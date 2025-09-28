@@ -1,4 +1,4 @@
-import { ChangelogTitle } from "@/lambda/types";
+import { ChangelogTitle } from "../../generate/[jobId]/types";
 
 export type Repository = {
   id: string;
