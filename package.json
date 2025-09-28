@@ -9,6 +9,7 @@
     "lint": "eslint --fix"
   },
   "dependencies": {
+    "@eslint/compat": "^1.4.0",
     "@heroui/accordion": "2.2.23",
     "@heroui/alert": "2.2.26",
     "@heroui/autocomplete": "2.3.28",
@@ -54,6 +55,7 @@
     "@internationalized/date": "^3.9.0",
     "@react-aria/ssr": "3.9.10",
     "@react-aria/visually-hidden": "3.8.27",
+    "@upstash/redis": "^1.35.4",
     "aws-sdk": "^2.1692.0",
     "better-auth": "^1.3.17",
     "class-variance-authority": "^0.7.1",
