@@ -22,7 +22,7 @@ const selectChangelogQuery = `
   limit 1
 `;
 
-type PublicChangelog = {
+export type PublicChangelog = {
   title: string | null;
   subtitle?: string | null;
   version?: string | null;
@@ -33,7 +33,7 @@ type PublicChangelog = {
   updatedAt: string;
 };
 
-function parseChangelog(row: ChangelogRow): PublicChangelog | null {
+export function parseChangelog(row: ChangelogRow): PublicChangelog | null {
   const source = row.final_changelog_result;
   let parsed: any = null;
 
@@ -90,4 +90,67 @@ export async function getPublicChangelog(
   }
 
   return parsed;
+}
+
+type RepoChangelogRow = ChangelogRow & {
+  repo_id: string;
+  repo_name: string;
+  repo_owner: string;
+  repo_full_name: string;
+};
+
+export type PublicRepoChangelogItem = PublicChangelog & {
+  id: string;
+  repoId: string;
+  repoName: string;
+  repoOwner: string;
+  repoFullName: string;
+};
+
+const selectRepoChangelogsQuery = `
+  select
+    id,
+    status,
+    final_changelog_result,
+    changelog_title,
+    created_at,
+    updated_at,
+    repo_id,
+    repo_name,
+    repo_owner,
+    repo_full_name
+  from changelog_job
+  where repo_id = $1 and status = 'completed'
+  order by updated_at desc, id desc
+  limit $2
+`;
+
+export async function getPublicRepoChangelogs(
+  repoId: string,
+  limit = 50
+): Promise<PublicRepoChangelogItem[]> {
+  const result = await pool.query<RepoChangelogRow>(selectRepoChangelogsQuery, [
+    repoId,
+    Math.max(1, Math.min(200, limit)),
+  ]);
+
+  const items: PublicRepoChangelogItem[] = [];
+
+  for (const row of result.rows) {
+    const parsed = parseChangelog(row);
+    if (!parsed || !parsed.markdown) {
+      continue;
+    }
+
+    items.push({
+      id: row.id,
+      repoId: row.repo_id,
+      repoName: row.repo_name,
+      repoOwner: row.repo_owner,
+      repoFullName: row.repo_full_name,
+      ...parsed,
+    });
+  }
+
+  return items;
 }

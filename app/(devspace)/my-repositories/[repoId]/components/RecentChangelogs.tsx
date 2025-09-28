@@ -315,14 +315,6 @@ export function RecentChangelogs({
               Summaries of what’s been shipped will appear here.
             </p>
           </div>
-          <Button
-            color="default"
-            variant="flat"
-            isDisabled={!changelogFeed?.changelogs.length}
-            onPress={onViewAll}
-          >
-            View all
-          </Button>
         </div>
 
         {renderContent()}

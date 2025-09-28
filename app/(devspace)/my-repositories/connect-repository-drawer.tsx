@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@heroui/button";
 import { Spinner } from "@heroui/spinner";
+// reauthorize removed per request
 import {
   Drawer,
   DrawerBody,
@@ -171,6 +172,20 @@ export function RepositoryConnectDrawer({
                 >
                   Try again
                 </Button>
+                {/* Reauthorize GitHub removed */}
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={() =>
+                    window.open(
+                      "/api/github/org-access",
+                      "_blank",
+                      "noopener,noreferrer"
+                    )
+                  }
+                >
+                  Manage Org Access
+                </Button>
               </div>
             </div>
           ) : !availableReposToDisplay.length ? (
@@ -179,6 +194,23 @@ export function RepositoryConnectDrawer({
                 No repositories available. Ensure your GitHub account has
                 accessible repositories.
               </p>
+              <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                {/* Reauthorize GitHub removed */}
+                <Button
+                  size="sm"
+                  variant="flat"
+                  className="w-full sm:w-auto"
+                  onPress={() =>
+                    window.open(
+                      "/api/github/org-access",
+                      "_blank",
+                      "noopener,noreferrer"
+                    )
+                  }
+                >
+                  Manage Org Access
+                </Button>
+              </div>
             </div>
           ) : (
             availableReposToDisplay.map((repo) => {

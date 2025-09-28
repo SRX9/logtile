@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { notFound } from "next/navigation";
-import { RangeCalendar } from "@heroui/react";
+import { RangeCalendar, ScrollShadow } from "@heroui/react";
 import {
   Modal,
   ModalBody,
@@ -49,10 +49,12 @@ const RANGE_MODE_OPTIONS = [
 
 type RangeMode = (typeof RANGE_MODE_OPTIONS)[number]["id"];
 
+type RouteParams = {
+  repoId?: string | string[];
+};
+
 type GeneratePageProps = {
-  params: {
-    repoId?: string;
-  };
+  params?: Promise<RouteParams>;
 };
 
 type HeadCommitSummary = {
@@ -201,7 +203,7 @@ function formatProcessingTimeFromCommits(commitCount: number) {
     return "0 seconds";
   }
 
-  const totalSeconds = commitCount * 3;
+  const totalSeconds = commitCount * 30;
 
   if (totalSeconds < 60) {
     const roundedSeconds = Math.max(1, totalSeconds);
@@ -287,7 +289,15 @@ function useGenerateOptions(repoId: string | undefined) {
 }
 
 export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
-  const repoId = params.repoId;
+  const paramsPromise = useMemo(
+    () => params ?? Promise.resolve<RouteParams>({ repoId: undefined }),
+    [params]
+  );
+
+  const resolvedParams = use<RouteParams>(paramsPromise);
+
+  const rawRepoId = resolvedParams?.repoId;
+  const repoId = Array.isArray(rawRepoId) ? rawRepoId[0] : rawRepoId;
 
   if (!repoId) {
     notFound();
@@ -665,14 +675,8 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
         </div>
       ) : data ? (
         <div className="space-y-8">
-          {data.warning && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-900/20 dark:text-amber-200">
-              {data.warning}
-            </div>
-          )}
-
           <section className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="rounded-xl border border-slate-200  p-6 shadow-sm dark:border-slate-800 ">
               <div className="space-y-2">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                   1. Select Range
@@ -748,7 +752,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                             <Button
                               size="sm"
                               variant="flat"
-                              color="primary"
+                              color="default"
                               isDisabled={!isDateRangeComplete}
                               onPress={handleOpenCommitDrawer}
                             >
@@ -818,7 +822,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
           {shouldShowProcessingOverview && (
             <section className="space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="rounded-xl border border-slate-200  p-6 shadow-sm dark:border-slate-800 ">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
@@ -857,7 +861,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                           {estimatedProcessingTimeLabel ?? "Unavailable"}
                         </p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-500">
-                          We approximate 3 seconds per commit.
+                          We approximate half a minute per commit.
                         </p>
                       </>
                     )}
@@ -892,7 +896,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                       <Button
                         size="sm"
                         variant="flat"
-                        color="primary"
+                        color="default"
                         onPress={handleOpenCommitDrawer}
                         isDisabled={!isDateRangeComplete || isLoadingCommits}
                       >
@@ -1028,7 +1032,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                         className={`rounded-lg border p-4 text-sm transition-colors ${
                           isDeselected
                             ? "border-slate-200 bg-slate-50 opacity-70 dark:border-slate-800 dark:bg-slate-900/40"
-                            : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/60"
+                            : "border-slate-200  dark:border-slate-700 "
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -1125,7 +1129,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                     <h3 className="text-lg font-semibold mb-2">
                       Selected Commits
                     </h3>
-                    <div className="max-h-96 overflow-y-auto space-y-2">
+                    <ScrollShadow className="max-h-96 space-y-2">
                       {!selectedCommits.length ? (
                         <p className="text-sm text-slate-500 dark:text-slate-400">
                           No commits selected
@@ -1135,7 +1139,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                           {selectedCommits.map((commit) => (
                             <div
                               key={commit.sha}
-                              className="p-3 bg-white dark:bg-slate-800 rounded border"
+                              className="p-3  dark:bg-slate-800 rounded border"
                             >
                               <div className="space-y-1">
                                 <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -1167,7 +1171,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                           ))}
                         </div>
                       )}
-                    </div>
+                    </ScrollShadow>
                   </div>
 
                   <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 rounded-lg">

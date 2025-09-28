@@ -107,7 +107,7 @@ export function LogsTab({ jobId }: { jobId: string }) {
 
   // Start polling every 5s while pending; stop when status changes or after 5 minutes
   useEffect(() => {
-    const isPending = status === "pending";
+    const isPending = status === "pending" || status === "processing";
 
     const stopPolling = () => {
       if (pollingTimerRef.current) {
@@ -138,7 +138,7 @@ export function LogsTab({ jobId }: { jobId: string }) {
 
       try {
         const next = await fetchLogs();
-        if (next.status !== "pending") {
+        if (next.status !== "pending" && next.status !== "processing") {
           stopPolling();
         }
       } catch {

@@ -3,10 +3,12 @@ import type { Metadata } from "next";
 import { Streamdown as MarkdownRender } from "streamdown";
 
 import { getPublicChangelog } from "@/lib/changelog";
+import { fontHeading } from "@/config/fonts";
+import { cn } from "@/lib/utils";
 
 type Params = Promise<{ jobId?: string }>;
 
-export const revalidate = 60 * 60 * 24; // 1 day
+export const revalidate = 10;
 
 export async function generateMetadata({
   params,
@@ -59,18 +61,28 @@ export default async function PublicChangelogPage({
 
   return (
     <div className="min-h-screen bg-slate-50 py-16 px-4 text-slate-900">
-      <div className="mx-auto max-w-3xl rounded-3xl bg-white/95 p-10 shadow-xl">
+      <div className="mx-auto max-w-3xl rounded-3xl bg-white/95 p-4 sm:p-10 shadow-xl">
         <div className="mb-8 text-center">
           {changelog.version ? (
             <span className="mb-4 inline-flex items-center rounded-full bg-slate-100 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
               {changelog.version}
             </span>
           ) : null}
-          <h1 className="text-4xl font-semibold tracking-tight">
+          <h1
+            className={cn(
+              fontHeading.className,
+              "text-4xl font-semibold tracking-tight"
+            )}
+          >
             {changelog.title ?? "Changelog"}
           </h1>
           {changelog.subtitle ? (
-            <p className="mt-3 text-base text-slate-500">
+            <p
+              className={cn(
+                fontHeading.className,
+                "mt-3 text-base text-slate-500"
+              )}
+            >
               {changelog.subtitle}
             </p>
           ) : null}
@@ -82,7 +94,7 @@ export default async function PublicChangelogPage({
           </div>
         </div>
 
-        <div className="prose mx-auto max-w-none text-slate-800 prose-h2:mt-12 prose-h2:text-slate-900 prose-a:text-slate-900 prose-strong:text-slate-900">
+        <div className="prose mx-auto max-w-none text-slate-800 prose-headings:mt-8 prose-h2:mt-12 prose-h2:text-slate-900 prose-a:text-slate-900 prose-strong:text-slate-900 prose-headings:font-heading">
           <MarkdownRender className="prose max-w-none">
             {changelog.markdown}
           </MarkdownRender>

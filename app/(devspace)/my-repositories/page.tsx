@@ -10,6 +10,7 @@ import { ArrowUpRight, Clock3, GitBranch, Github, Shield } from "lucide-react";
 import { RepositoryConnectDrawer } from "./connect-repository-drawer";
 import { Badge } from "@heroui/badge";
 import { Chip } from "@heroui/chip";
+// removed reauthorize helper
 
 type ConnectedRepository = {
   id: string;
@@ -75,8 +76,8 @@ export default function MyRepositories() {
 
   return (
     <>
-      <div className=" w-full  space-y-10">
-        <div className="flex items-center border-b py-8 px-10 justify-between">
+      <div className="w-full space-y-10">
+        <div className="flex flex-col gap-6 border-b px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10 lg:py-8">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
               Connected Repositories
@@ -85,25 +86,41 @@ export default function MyRepositories() {
               Manage the repositories linked to your Logtiles workspace.
             </p>
           </div>
-          <Button
-            color="primary"
-            variant="solid"
-            onPress={() => setIsConnectDrawerOpen(true)}
-          >
-            Connect New Repository
-          </Button>
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+            <Button
+              variant="flat"
+              className="w-full sm:w-auto"
+              onPress={() =>
+                window.open(
+                  "/api/github/org-access",
+                  "_blank",
+                  "noopener,noreferrer"
+                )
+              }
+            >
+              Manage Org Access
+            </Button>
+            <Button
+              color="primary"
+              variant="solid"
+              className="w-full sm:w-auto"
+              onPress={() => setIsConnectDrawerOpen(true)}
+            >
+              Connect New Repository
+            </Button>
+          </div>
         </div>
 
-        <section className="w-full px-10 pb-8">
+        <section className="mx-auto w-full max-w-[1400px] px-4 pb-8 sm:px-6 lg:px-10">
           {isLoadingConnected ? (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
                 <Card
                   key={index}
                   aria-label="Loading repository"
                   className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/60 bg-white/90 backdrop-blur-sm shadow-sm dark:border-slate-800/60 dark:bg-slate-900/65"
                 >
-                  <CardHeader className="flex items-start justify-between gap-4 px-5 py-4">
+                  <CardHeader className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex flex-1 items-start gap-3">
                       <Skeleton
                         className="h-12 w-12 rounded-xl"
@@ -141,7 +158,7 @@ export default function MyRepositories() {
                       aria-hidden="true"
                     />
                   </CardBody>
-                  <CardFooter className="flex flex-wrap gap-4 border-t border-slate-200/80 bg-slate-50/60 px-5 py-4 text-xs text-slate-500 dark:border-slate-800/60 dark:bg-slate-900/50 dark:text-slate-400">
+                  <CardFooter className="flex flex-col gap-4 border-t border-slate-200/80 bg-slate-50/60 px-5 py-4 text-xs text-slate-500 dark:border-slate-800/60 dark:bg-slate-900/50 dark:text-slate-400 sm:flex-row sm:flex-wrap">
                     {[0, 1, 2].map((detail) => (
                       <div key={detail} className="flex items-center gap-2.5">
                         <Skeleton
@@ -169,7 +186,7 @@ export default function MyRepositories() {
               {connectedError}
             </div>
           ) : connectedRepos.length === 0 ? (
-            <div className="flex h-[420px] flex-col items-center justify-center  px-12 text-center">
+            <div className="flex min-h-[360px] flex-col items-start justify-center px-4 text-left sm:min-h-[420px] sm:items-center sm:px-12 sm:text-center">
               <div className="flex items-center gap-5">
                 <span className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg ring-4 ring-slate-100/80 dark:bg-slate-100 dark:text-slate-900 dark:ring-slate-800/70">
                   <Github className="h-8 w-8" aria-hidden="true" />
@@ -189,7 +206,7 @@ export default function MyRepositories() {
                 rich changelog drafts, track activity, and collaborate with your
                 team.
               </p>
-              <div className="mt-8 flex flex-col items-center gap-3 text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+              <div className="mt-8 flex flex-col items-start gap-3 text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500 sm:items-center">
                 <span className="inline-flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                     <Shield className="h-5 w-5" aria-hidden="true" />
@@ -199,14 +216,14 @@ export default function MyRepositories() {
               </div>
               <Button
                 color="secondary"
-                className="mt-10"
+                className="mt-10 self-start sm:self-center"
                 onPress={() => setIsConnectDrawerOpen(true)}
               >
                 Connect a repository
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {connectedRepos.map((repo) => (
                 <Link
                   key={repo.id}
@@ -214,7 +231,7 @@ export default function MyRepositories() {
                   className="group block h-full"
                 >
                   <Card className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/60 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary-200/50 hover:shadow-lg dark:border-slate-800/60 dark:bg-slate-900/65 dark:hover:border-primary-500/30">
-                    <CardHeader className="items-start justify-between gap-4 px-5 py-4">
+                    <CardHeader className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar
@@ -238,7 +255,9 @@ export default function MyRepositories() {
                           </p>
                         </div>
                       </div>
-                      <Chip color="primary">Github</Chip>
+                      <Chip color="primary" className="self-start sm:self-auto">
+                        Github
+                      </Chip>
                     </CardHeader>
                     <CardBody className="flex flex-1 flex-col gap-3 px-5 pb-5 pt-0 text-sm text-slate-600 dark:text-slate-400">
                       {repo.description ? (
@@ -251,7 +270,7 @@ export default function MyRepositories() {
                         </p>
                       )}
                     </CardBody>
-                    <CardFooter className="flex flex-wrap gap-4 border-t border-slate-200/80 bg-slate-50/60 px-5 py-4 text-xs text-slate-500 dark:border-slate-800/60 dark:bg-slate-900/50 dark:text-slate-400">
+                    <CardFooter className="flex flex-col gap-4 border-t border-slate-200/80 bg-slate-50/60 px-5 py-4 text-xs text-slate-500 dark:border-slate-800/60 dark:bg-slate-900/50 dark:text-slate-400 sm:flex-row sm:flex-wrap">
                       <div className="flex items-center gap-2.5">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-sm dark:bg-slate-800 dark:text-slate-300">
                           <GitBranch className="h-5 w-5" aria-hidden="true" />

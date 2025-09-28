@@ -50,7 +50,8 @@ export function ChangelogTab({ jobId }: { jobId: string }) {
 
   // When status is pending, start polling every 5s. Stop when status changes or after 5 minutes.
   useEffect(() => {
-    const isPending = data?.status === "pending";
+    const isPending =
+      data?.status === "pending" || data?.status === "processing";
 
     // Helper to clear polling
     const stopPolling = () => {
@@ -84,7 +85,7 @@ export function ChangelogTab({ jobId }: { jobId: string }) {
 
       try {
         const next = await fetchChangelog();
-        if (next.status !== "pending") {
+        if (next.status !== "pending" && next.status !== "processing") {
           stopPolling();
         }
       } catch {
@@ -110,7 +111,7 @@ export function ChangelogTab({ jobId }: { jobId: string }) {
   return (
     <div className="space-y-6">
       {data ? (
-        data.status === "pending" ? (
+        data.status === "pending" || data.status === "processing" ? (
           <PendingMessage />
         ) : (
           <FinalChangelog

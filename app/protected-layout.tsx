@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useUser } from "@/lib/context/UserContext";
 
-const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTES = ["/", "/login"];
 const PUBLIC_ROUTE_PREFIXES = ["/changelog/"];
 
 export function ProtectedLayout({ children }: { children: React.ReactNode }) {

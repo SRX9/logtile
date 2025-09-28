@@ -15,7 +15,7 @@ import { RepositoryBreadcrumbs } from "@/components/repository-breadcrumbs";
 import { ApiResponse, RepositoryChangelogResponse } from "./types";
 import { RecentChangelogs } from "./components/RecentChangelogs";
 import { buildDateRangeLabel, formatDate } from "./utils/date";
-import { GitBranchIcon } from "lucide-react";
+import { FileIcon, GitBranchIcon, PencilIcon } from "lucide-react";
 
 export default function RepositoryDetailsPage() {
   const params = useParams();
@@ -433,7 +433,7 @@ export default function RepositoryDetailsPage() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col items-start gap-2 justify-between h-full sm:items-end">
+            <div className="flex flex-col items-start gap-3 justify-between h-full sm:items-end">
               <Button
                 color="primary"
                 variant="solid"
@@ -441,7 +441,22 @@ export default function RepositoryDetailsPage() {
                   router.push(`/my-repositories/${repository.repo_id}/generate`)
                 }
               >
+                <PencilIcon className="w-4 h-4" />
                 Generate changelog
+              </Button>
+              <Button
+                color="default"
+                variant="flat"
+                onPress={() =>
+                  window.open(
+                    `/changelog/repo/${repository.repo_id}`,
+                    "_blank",
+                    "noopener,noreferrer"
+                  )
+                }
+              >
+                <FileIcon className="w-4 h-4" />
+                View Changelog Page
               </Button>
             </div>
           </div>
@@ -569,7 +584,11 @@ export default function RepositoryDetailsPage() {
         changelogError={changelogError}
         isLoadingMore={isLoadingMore}
         onViewAll={() =>
-          router.push(`/my-changelogs?repo=${repository.repo_id}`)
+          window.open(
+            `/changelog/repo/${repository.repo_id}`,
+            "_blank",
+            "noopener,noreferrer"
+          )
         }
         onRetry={loadChangelogs}
         onLoadMore={loadMoreChangelogs}

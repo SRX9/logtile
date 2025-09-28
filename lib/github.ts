@@ -88,7 +88,7 @@ export async function getGithubAccessTokenForUser(
 export async function fetchGithubUserRepositories(token: string) {
   const repos = await fetchFromGithub<GithubRepo[]>(
     token,
-    `${GITHUB_API_BASE}/user/repos?per_page=100`
+    `${GITHUB_API_BASE}/user/repos?per_page=100&affiliation=owner,collaborator,organization_member&sort=updated`
   );
   return repos;
 }

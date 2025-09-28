@@ -2,7 +2,8 @@ export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
   name: "Logtiles",
-  description: "Beautiful changelog management with GitHub authentication.",
+  description:
+    "AI-powered changelogs from your GitHub commits — clean, accurate, fast.",
   navItems: [
     {
       label: "Home",
