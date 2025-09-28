@@ -337,8 +337,15 @@ export interface Stage4AuditLogEntry {
   details?: Record<string, unknown>;
 }
 
+export interface ChangelogTitle {
+  title: string;
+  version_number?: string;
+  date: string;
+}
+
 export interface Stage4Result {
   markdown: string;
+  changelogTitle: ChangelogTitle;
   metrics: { llmCalls: number };
   logs: Stage4AuditLogEntry[];
 }

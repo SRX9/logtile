@@ -11,7 +11,7 @@ import {
   DropdownTrigger,
 } from "@heroui/dropdown";
 import { Navbar, NavbarContent, NavbarItem } from "@heroui/navbar";
-import { FolderOpen, FileText } from "lucide-react";
+import { FolderOpen, FileText, X } from "lucide-react";
 
 import { cn } from "@heroui/theme";
 import { fontHeading } from "@/config/fonts";
@@ -21,7 +21,6 @@ import { useTheme } from "next-themes";
 
 export function DevspaceNavbar() {
   const { user, signOutUser } = useUser();
-  const { theme, setTheme } = useTheme();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -60,21 +59,6 @@ export function DevspaceNavbar() {
 
       <NavbarContent justify="end" className="items-center gap-2">
         <NavbarItem>
-          <Button
-            isIconOnly
-            variant="light"
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="w-9 h-9"
-          >
-            {theme === "light" ? (
-              <MoonFilledIcon size={18} />
-            ) : (
-              <SunFilledIcon size={18} />
-            )}
-          </Button>
-        </NavbarItem>
-
-        <NavbarItem>
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
               <Avatar
@@ -108,10 +92,17 @@ export function DevspaceNavbar() {
 }
 
 // Sidebar component extracted for reuse
-export function DevspaceSidebar() {
+export function DevspaceSidebar({
+  onClose,
+  isMobile = false,
+}: {
+  onClose?: () => void;
+  isMobile?: boolean;
+}) {
   const { user, signOutUser } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
 
   const menuItems = [
     {
@@ -141,28 +132,48 @@ export function DevspaceSidebar() {
     return pathname === href;
   };
 
+  const handleNavigation = (href: string) => {
+    router.push(href);
+    if (isMobile && onClose) {
+      onClose();
+    }
+  };
+
   return (
     <div className="w-64 h-screen bg-background border-r border-slate-200 dark:border-slate-800 flex flex-col">
-      {/* Logo and Brand */}
+      {/* Logo and Brand with close button for mobile */}
       <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <div className="rounded-full flex items-center justify-center">
-            <Image
-              width={250}
-              height={20}
-              src="/icon1.png"
-              alt="Logo"
-              className="w-10 h-10 dark:invert"
-            />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="rounded-full flex items-center justify-center">
+              <Image
+                width={250}
+                height={20}
+                src="/icon1.png"
+                alt="Logo"
+                className="w-10 h-10 dark:invert"
+              />
+            </div>
+            <h1
+              className={cn(
+                fontHeading.className,
+                "font-heading text-slate-900 text-lg pt-1 -tracking-tighter dark:text-slate-100"
+              )}
+            >
+              Logtiles
+            </h1>
           </div>
-          <h1
-            className={cn(
-              fontHeading.className,
-              "font-heading text-slate-900 text-lg pt-1 -tracking-tighter dark:text-slate-100"
-            )}
-          >
-            Logtiles
-          </h1>
+          {isMobile && onClose && (
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm"
+              onClick={onClose}
+              className="md:hidden"
+            >
+              <X size={20} />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -175,7 +186,7 @@ export function DevspaceSidebar() {
             return (
               <li key={item.key}>
                 <button
-                  onClick={() => router.push(item.href)}
+                  onClick={() => handleNavigation(item.href)}
                   className={cn(
                     "w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-3",
                     isActive
@@ -193,7 +204,21 @@ export function DevspaceSidebar() {
       </nav>
 
       {/* User Profile Section - Fixed at bottom */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800 mt-auto">
+      <div className="p-4 border-t border-slate-200 dark:border-slate-800 mt-auto flex flex-col gap-4">
+        <Button
+          isIconOnly
+          variant="light"
+          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          className="w-full h-10 border flex justify-between px-3 border-slate-200 dark:border-slate-700"
+        >
+          Switch to {theme === "light" ? "Dark" : "Light"} Mode
+          {theme === "light" ? (
+            <MoonFilledIcon size={20} />
+          ) : (
+            <SunFilledIcon size={20} />
+          )}
+        </Button>
+
         <Dropdown placement="top-start">
           <DropdownTrigger>
             <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -214,9 +239,6 @@ export function DevspaceSidebar() {
             </button>
           </DropdownTrigger>
           <DropdownMenu aria-label="Profile Actions" variant="flat">
-            <DropdownItem key="settings">Settings</DropdownItem>
-            <DropdownItem key="team_settings">Team Settings</DropdownItem>
-            <DropdownItem key="analytics">Analytics</DropdownItem>
             <DropdownItem
               key="logout"
               color="danger"

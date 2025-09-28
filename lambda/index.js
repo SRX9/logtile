@@ -38160,6 +38160,7 @@ function buildOutputData(job, stage1Result, totalSelected, stage2Result, stage3R
     } : void 0,
     stage4: stage4Result ? {
       markdown: stage4Result.markdown,
+      changelogTitle: stage4Result.changelogTitle,
       metrics: stage4Result.metrics
     } : void 0,
     totals: {
@@ -38199,6 +38200,12 @@ async function saveOutputAndFinal(jobId, outputData, finalResult) {
   await query(
     "UPDATE changelog_job SET stage_result = $2::jsonb, final_changelog_result = $3::jsonb, updated_at = NOW() WHERE id = $1",
     [jobId, JSON.stringify(outputData), JSON.stringify(finalResult)]
+  );
+}
+async function saveChangelogTitle(jobId, changelogTitle) {
+  await query(
+    "UPDATE changelog_job SET changelog_title = $2::jsonb, updated_at = NOW() WHERE id = $1",
+    [jobId, JSON.stringify(changelogTitle)]
   );
 }
 function extractCommitShas(commits) {
@@ -50235,19 +50242,24 @@ async function runStage4(input) {
   const systemPrompt = buildSystemPrompt();
   const userPrompt = buildUserPrompt(input.stage3, input.metadata);
   const raw = await llmInferenceAzure(userPrompt, systemPrompt);
-  const markdown = extractMarkdown(raw || "");
+  const { markdown, changelogTitle } = extractMarkdownAndTitle(
+    raw || "",
+    input.metadata
+  );
   pushLog4(logs, "info", "stage4_completed", {
     durationMs: Date.now() - startedAt,
-    length: markdown.length
+    markdownLength: markdown.length,
+    titleLength: changelogTitle.title.length
   });
-  return { markdown, metrics: { llmCalls: 1 }, logs };
+  return { markdown, changelogTitle, metrics: { llmCalls: 1 }, logs };
 }
 function buildSystemPrompt() {
   return [
     "You are a product-focused technical writer creating a public changelog for end users and developers who use this software.",
     "Focus on user-facing impact and value; never describe internal implementation details.",
     "Follow the critical rules provided in the user prompt exactly.",
-    "Return the final changelog as Markdown only, no extra commentary."
+    "Return your response as a JSON object with 'markdown' and 'title' fields only.",
+    "Do not include any title or release header in the 'markdown'. The title is returned separately and must not appear in the markdown body."
   ].join(" \n");
 }
 function buildUserPrompt(stage3, meta) {
@@ -50261,6 +50273,13 @@ function buildUserPrompt(stage3, meta) {
     "4. NEVER use phrases like 'refactored', 'migrated', 'restructured'",
     "5. NEVER mention specific technologies used internally",
     "6. FOCUS ONLY on what users can see, touch, or experience differently",
+    "7. Do NOT include any top-level document title or release header in the markdown.",
+    "8. Do NOT include version numbers or dates anywhere in the markdown.",
+    "",
+    "IMPORTANT: Return your response as a JSON object with two fields:",
+    "- 'markdown': The complete changelog in Markdown format",
+    "- 'title': A concise title for this changelog as a string",
+    "",
     "INPUT (JSON):",
     JSON.stringify(
       {
@@ -50278,24 +50297,23 @@ function buildUserPrompt(stage3, meta) {
     ),
     "CHANGELOG STRUCTURE:",
     [
-      "# [Version Number] - [Date]",
-      "",
-      "## \u2728 What's New",
+      "Start directly with the sections below. Do NOT include any top-level document title, release heading, version, or date in the markdown.",
+      "### What's New",
       "[2-3 sentences highlighting the most impactful changes from a user's perspective]",
       "",
-      "## New Features",
+      "### New Features",
       "[Focus on capabilities users gain, not how they were built]",
       "",
-      "## Fixed Issues",
+      "### Fixed Issues",
       "[Describe problems users experienced that are now resolved]",
       "",
-      "##  Performance Improvements",
+      "### Performance Improvements",
       "[Only mention improvements users will notice]",
       "",
-      "## Important Changes",
+      "### Important Changes",
       "[Cover breaking changes, security updates, or required follow-up actions]",
       "",
-      "## Platform-Specific Updates",
+      "### Platform-Specific Updates",
       "[Include only if there are platform-specific notes such as Web, iOS, Android] with platform name in the heading and then paragraph"
     ].join("\n"),
     "WRITING GUIDANCE:",
@@ -50304,28 +50322,74 @@ function buildUserPrompt(stage3, meta) {
     "- Write in second person, focusing on user benefits and outcomes.",
     "- Be specific about value but avoid implementation details or internal terminology.",
     "- If a section has no content, omit the header entirely.",
-    "- Use metadata.version when available; otherwise render the version as 'Unreleased'.",
-    "- Use metadata.dateRange (prefer the 'to' date, fallback to 'from') or today's date if none is provided. Format as YYYY-MM-DD.",
+    "- Do NOT include any top-level title, release name, version number, or date in the markdown body; those are handled separately.",
+    "- Begin the markdown with the first section heading (e.g., '### What's New') rather than a document title.",
     "- Integrate executive summary lines into the 'What's New' section, adapting wording as needed for clarity.",
     "- Keep bullets concise, user-focused, and free of prohibited terminology.",
     "- Ensure the Markdown is clean and well-structured with headings, bullet lists, and tables rendered properly without placeholders or artifacts.",
-    "- Replace any placeholder text (e.g., values wrapped in brackets) with actual data or omit the row if data is missing."
+    "- Replace any placeholder text (e.g., values wrapped in brackets) with actual data or omit the row if data is missing.",
+    "",
+    "TITLE REQUIREMENTS:",
+    "- The title should be concise (5-10 words maximum)",
+    "- It should capture the main theme of changes in this release",
+    "- Focus on the most impactful changes from a user perspective",
+    "- Do not repeat the title inside the 'markdown' content.",
+    "- Make it professional and user-focused"
   ].join("\n\n");
 }
-function extractMarkdown(raw) {
-  if (!raw) return "";
+function extractMarkdownAndTitle(raw, meta) {
+  if (!raw) {
+    const version3 = meta.version || "Unreleased";
+    const date2 = meta.dateRange?.to ? new Date(meta.dateRange.to).toISOString().split("T")[0] : (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+    return {
+      markdown: "",
+      changelogTitle: {
+        title: "Release Summary",
+        version_number: version3,
+        date: date2
+      }
+    };
+  }
   try {
     const parsed = JSON.parse(raw);
-    if (typeof parsed?.markdown === "string") return parsed.markdown;
+    if (parsed && typeof parsed.markdown === "string" && typeof parsed.title === "string") {
+      return {
+        markdown: parsed.markdown,
+        changelogTitle: {
+          title: parsed.title,
+          version_number: parsed.version_number || meta.version,
+          date: parsed.date || (meta.dateRange?.to ? new Date(meta.dateRange.to).toISOString().split("T")[0] : (/* @__PURE__ */ new Date()).toISOString().split("T")[0])
+        }
+      };
+    }
   } catch {
   }
   try {
     const repaired = jsonrepair(raw);
     const parsed = JSON.parse(repaired);
-    if (typeof parsed?.markdown === "string") return parsed.markdown;
+    if (parsed && typeof parsed.markdown === "string" && typeof parsed.title === "string") {
+      return {
+        markdown: parsed.markdown,
+        changelogTitle: {
+          title: parsed.title,
+          version_number: parsed.version_number || meta.version,
+          date: parsed.date || (meta.dateRange?.to ? new Date(meta.dateRange.to).toISOString().split("T")[0] : (/* @__PURE__ */ new Date()).toISOString().split("T")[0])
+        }
+      };
+    }
   } catch {
   }
-  return raw.trim();
+  const version2 = meta.version || "Unreleased";
+  const date = meta.dateRange?.to ? new Date(meta.dateRange.to).toISOString().split("T")[0] : (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+  return {
+    markdown: raw.trim(),
+    changelogTitle: {
+      title: raw.trim().substring(0, 50) + (raw.length > 50 ? "..." : ""),
+      // Use first part of raw text as title
+      version_number: version2,
+      date
+    }
+  };
 }
 function pushLog4(logs, level, message, details) {
   logs.push({
@@ -50548,6 +50612,7 @@ var handler = async (event) => {
         stage4Result
       );
       await saveOutputAndFinal(jobId, outputData, stage4Result);
+      await saveChangelogTitle(jobId, stage4Result.changelogTitle);
     } catch (error) {
       console.warn("Failed to persist output/final results", error);
     }

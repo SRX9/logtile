@@ -16,6 +16,7 @@ create table if not exists changelog_job (
   updated_at timestamptz not null default now(),
 stage_result jsonb,
 final_changelog_result jsonb,
+changelog_title jsonb,
 );
 
 -- Add index for efficient lookups by status and user

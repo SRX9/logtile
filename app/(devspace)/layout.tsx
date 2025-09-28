@@ -1,38 +1,78 @@
 "use client";
 
-import { useTheme } from "next-themes";
-import { Button } from "@heroui/button";
-import { MoonFilledIcon, SunFilledIcon } from "@/components/icons";
+import { useState, useEffect } from "react";
 import { DevspaceSidebar } from "@/components/devspace-navbar";
+import { Menu, X } from "lucide-react";
+import { Button } from "@heroui/button";
+import { cn } from "@heroui/theme";
 
 export default function DevspaceLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { theme, setTheme } = useTheme();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const mobile = window.innerWidth < 768; // md breakpoint
+      setIsMobile(mobile);
+      if (!mobile) {
+        setIsSidebarOpen(false); // Close sidebar when switching to desktop
+      }
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   return (
-    <div className="flex h-screen bg-background">
-      <DevspaceSidebar />
-      <div className="flex-1 flex flex-col min-w-0 relative">
-        {/* Top right theme toggle */}
-        <div className="absolute top-4 right-4 z-50">
-          <Button
-            isIconOnly
-            variant="light"
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="w-10 h-10 shadow-lg bg-background/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700"
-          >
-            {theme === "light" ? (
-              <MoonFilledIcon size={20} />
-            ) : (
-              <SunFilledIcon size={20} />
-            )}
-          </Button>
-        </div>
-        <main className="flex-1 overflow-auto">{children}</main>
+    <div className="flex h-screen bg-background relative">
+      {/* Mobile overlay */}
+      {isMobile && isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={cn(
+          "fixed md:relative z-50 h-screen transition-transform duration-300 ease-in-out md:translate-x-0",
+          isMobile && !isSidebarOpen && "-translate-x-full"
+        )}
+      >
+        <DevspaceSidebar
+          onClose={() => setIsSidebarOpen(false)}
+          isMobile={isMobile}
+        />
       </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        <main className="flex-1 overflow-auto flex justify-start">
+          {children}
+        </main>
+      </div>
+
+      {/* Floating menu button for mobile/tablet */}
+      {isMobile && !isSidebarOpen && (
+        <Button
+          isIconOnly
+          className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full shadow-lg bg-primary text-primary-foreground"
+          onClick={toggleSidebar}
+        >
+          <Menu size={24} />
+        </Button>
+      )}
     </div>
   );
 }

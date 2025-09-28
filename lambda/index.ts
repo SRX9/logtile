@@ -19,6 +19,7 @@ import {
   fetchCommitDetails,
   buildStage2JobLog,
   saveOutputAndFinal,
+  saveChangelogTitle,
 } from "./stage-utils";
 import { runStage2 } from "./stage2";
 import { runStage3 } from "./stage3";
@@ -50,6 +51,8 @@ export const handler = async (
     if (!jobId) {
       throw new Error("No jobId provided in record body");
     }
+
+    // let jobId = "77bbf518-1d94-4c62-8421-19ef2f59e631";
 
     console.log(`Processing changelog job: ${jobId}`);
 
@@ -284,6 +287,8 @@ export const handler = async (
         stage4Result
       );
       await saveOutputAndFinal(jobId, outputData, stage4Result);
+      // Save changelog title separately
+      await saveChangelogTitle(jobId, stage4Result.changelogTitle);
     } catch (error) {
       console.warn("Failed to persist output/final results", error);
     }

@@ -1,86 +1,197 @@
 "use client";
 
-import { useMemo } from "react";
-
-import { Badge } from "@heroui/badge";
-import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Code } from "@heroui/code";
-import { Divider } from "@heroui/divider";
-import { Tooltip } from "@heroui/tooltip";
-import { ScrollShadow } from "@heroui/scroll-shadow";
+import { useMemo, useState, useCallback, useEffect } from "react";
+import { Button } from "@heroui/button";
+import { Check, Copy } from "lucide-react";
 import { Streamdown as MarkdownRender } from "streamdown";
 
-import { formatDateTime } from "../utils";
-import type { FinalChangelogLogEntry, FinalChangelogMetrics } from "../types";
+import type { ChangelogTitle, FinalChangelogMetrics } from "../types";
+
+// TODO: Add optional generation log list for transparency in future iterations.
 
 type FinalChangelogProps = {
   markdown?: string | null;
-  logs?: FinalChangelogLogEntry[] | null;
+  title?: ChangelogTitle | null;
   metrics?: FinalChangelogMetrics | null;
+  jobId: string;
+};
+
+type MetadataItem = {
+  key: string;
+  label: string;
+  value: string;
 };
 
 export function FinalChangelog({
   markdown,
-  logs,
+  title,
   metrics,
+  jobId,
 }: FinalChangelogProps) {
-  const sortedLogs = useMemo(() => sortLogs(logs), [logs]);
-  const metricEntries = useMemo(() => Object.entries(metrics ?? {}), [metrics]);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
+  const [publicUrl, setPublicUrl] = useState<string | null>(null);
   const hasMarkdown = Boolean(markdown && markdown.trim().length > 0);
+  const changelogDate = useMemo(() => title?.date, [title?.date]);
+
+  const onCopy = useCallback(() => {
+    if (!markdown) {
+      return;
+    }
+    navigator.clipboard.writeText(markdown);
+    setIsCopied(true);
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 2000);
+  }, [markdown]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (!jobId) {
+      setPublicUrl(null);
+      return;
+    }
+    setPublicUrl(`${window.location.origin}/changelog/${jobId}`);
+  }, [jobId]);
+
+  const onOpenPublicPage = useCallback(() => {
+    if (!publicUrl) return;
+    window.open(publicUrl, "_blank", "noopener,noreferrer");
+  }, [publicUrl]);
+
+  const onCopyPublicLink = useCallback(() => {
+    if (!publicUrl) return;
+    navigator.clipboard.writeText(publicUrl);
+    setIsLinkCopied(true);
+    setTimeout(() => {
+      setIsLinkCopied(false);
+    }, 2000);
+  }, [publicUrl]);
+
+  const metadataItems = useMemo<MetadataItem[]>(() => {
+    const items: MetadataItem[] = [];
+
+    if (title?.version_number) {
+      items.push({
+        key: "version",
+        label: "Version",
+        value: title.version_number,
+      });
+    }
+
+    if (changelogDate) {
+      items.push({
+        key: "date",
+        label: "Release Date",
+        value: changelogDate,
+      });
+    }
+
+    return items;
+  }, [title?.version_number, changelogDate]);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Final Changelog</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Beautifully rendered markdown with helpful metrics and logs
-          </p>
+    <div className="space-y-8">
+      <header className="rounded-2xl  ">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-6 lg:flex-1 lg:min-w-0">
+            <div className="space-y-3">
+              <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                Release Overview
+              </p>
+              <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-50">
+                {title?.title ?? "Changelog not ready yet"}
+              </h2>
+              {!title && (
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  We’ll populate release metadata as soon as the generation
+                  pipeline finishes successfully.
+                </p>
+              )}
+            </div>
+
+            <MetadataGrid items={metadataItems} hasTitle={Boolean(title)} />
+          </div>
+          {hasMarkdown && (
+            <div className="flex flex-col gap-2  lg:flex-none">
+              <Button
+                color="primary"
+                onClick={onOpenPublicPage}
+                isDisabled={!publicUrl}
+              >
+                View Changelog Page
+              </Button>
+              <Button
+                variant="bordered"
+                onClick={onCopyPublicLink}
+                isDisabled={!publicUrl}
+                startContent={
+                  isLinkCopied ? <Check size={16} /> : <Copy size={16} />
+                }
+              >
+                {isLinkCopied ? "Link Copied" : "Copy changelog URL"}
+              </Button>
+              <Button
+                variant="bordered"
+                onClick={onCopy}
+                startContent={
+                  isCopied ? <Check size={16} /> : <Copy size={16} />
+                }
+              >
+                {isCopied ? "Copied" : "Copy markdown"}
+              </Button>
+            </div>
+          )}
         </div>
-        <MetricStack entries={metricEntries} />
-      </CardHeader>
+      </header>
 
-      <CardBody className="space-y-6">
-        <section className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            Rendered Markdown
-          </h3>
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
-            {hasMarkdown ? (
-              <ScrollShadow hideScrollBar className="max-h-[600px] pr-4">
-                <MarkdownRender className="prose dark:prose-invert">
-                  {markdown ?? ""}
-                </MarkdownRender>
-              </ScrollShadow>
-            ) : (
-              <EmptyMarkdown />
-            )}
-          </div>
-        </section>
+      <section className="px-4 pb-40">
+        {hasMarkdown ? (
+          <MarkdownRender className="prose max-w-none dark:prose-invert">
+            {markdown ?? ""}
+          </MarkdownRender>
+        ) : (
+          <EmptyMarkdown />
+        )}
+      </section>
+    </div>
+  );
+}
 
-        <Divider />
+type MetadataGridProps = {
+  items: MetadataItem[];
+  hasTitle: boolean;
+};
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Generation Logs
-            </h3>
-            <Badge color="default" variant="flat">
-              {sortedLogs.length}
-            </Badge>
-          </div>
-          <div className="space-y-2">
-            {sortedLogs.length === 0 ? (
-              <EmptyLogs />
-            ) : (
-              sortedLogs.map((entry, index) => (
-                <LogEntry key={`${entry.timestamp}-${index}`} entry={entry} />
-              ))
-            )}
-          </div>
-        </section>
-      </CardBody>
-    </Card>
+function MetadataGrid({ items, hasTitle }: MetadataGridProps) {
+  if (items.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        {hasTitle
+          ? "Additional release metadata is unavailable."
+          : "Awaiting changelog title metadata."}
+      </div>
+    );
+  }
+
+  return (
+    <dl className="grid gap-4 sm:grid-cols-2">
+      {items.map((item) => (
+        <div
+          key={item.key}
+          className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/40"
+        >
+          <dt className="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            {item.label}
+          </dt>
+          <dd className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
+            {item.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -106,49 +217,6 @@ function EmptyMarkdown() {
         here.
       </p>
     </div>
-  );
-}
-
-function EmptyLogs() {
-  return (
-    <div className="rounded-lg border border-dashed border-slate-300 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-      No generation logs recorded.
-    </div>
-  );
-}
-
-function LogEntry({ entry }: { entry: FinalChangelogLogEntry }) {
-  const badgeColor =
-    entry.level === "error"
-      ? "danger"
-      : entry.level === "warning"
-        ? "warning"
-        : "success";
-
-  return (
-    <div className="flex flex-col gap-2 rounded-lg border border-slate-200 p-4 text-sm dark:border-slate-800">
-      <div className="flex flex-wrap items-center gap-3">
-        <Badge color={badgeColor} variant="flat">
-          {entry.level}
-        </Badge>
-        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-          {formatDateTime(entry.timestamp)}
-        </span>
-      </div>
-      <p className="font-medium text-slate-700 dark:text-slate-200">
-        {entry.message}
-      </p>
-      {entry.details && Object.keys(entry.details).length > 0 && (
-        <DetailPreview details={entry.details} />
-      )}
-    </div>
-  );
-}
-
-function sortLogs(logs?: FinalChangelogLogEntry[] | null) {
-  if (!logs) return [];
-  return [...logs].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 }
 
@@ -179,29 +247,5 @@ function MetricStack({ entries }: MetricStackProps) {
         </div>
       ))}
     </div>
-  );
-}
-
-type DetailPreviewProps = {
-  details: Record<string, unknown> | null | undefined;
-};
-
-function DetailPreview({ details }: DetailPreviewProps) {
-  if (!details) return null;
-
-  return (
-    <Tooltip
-      content={
-        <Code className="max-w-xs whitespace-pre-wrap text-left text-xs">
-          {JSON.stringify(details, null, 2)}
-        </Code>
-      }
-      placement="bottom"
-      showArrow
-    >
-      <button className="self-start rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-        View details
-      </button>
-    </Tooltip>
   );
 }

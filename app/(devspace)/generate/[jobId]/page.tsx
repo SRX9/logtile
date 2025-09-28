@@ -1,22 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { notFound } from "next/navigation";
-import { Button } from "@heroui/button";
-import { Spinner } from "@heroui/spinner";
+import { Tabs, Tab } from "@heroui/tabs";
+import { Skeleton } from "@heroui/skeleton";
 
-import { FinalChangelog } from "./components/FinalChangelog";
 import { JobHeader } from "./components/JobHeader";
-import { JobOverview } from "./components/JobOverview";
-import { SelectedCommits } from "./components/SelectedCommits";
-import type {
-  FinalChangelogLogEntry,
-  FinalChangelogResult,
-  JobDetails,
-  JobLogEntry,
-} from "./types";
-import { formatDateRange, formatDateTime } from "./utils";
-import { ProgressAndLogs } from "./components/ProgressAndLogs";
+import { ChangelogTab } from "./components/ChangelogTab";
+import { OverviewTab } from "./components/OverviewTab";
+import { LogsTab } from "./components/LogsTab";
 
 type GenerateJobPageProps = {
   params: Promise<{
@@ -26,10 +18,13 @@ type GenerateJobPageProps = {
 
 export default function GenerateJobPage({ params }: GenerateJobPageProps) {
   const [jobId, setJobId] = useState<string | null>(null);
-  const [job, setJob] = useState<JobDetails | null>(null);
+  const [header, setHeader] = useState<{
+    repo_full_name: string;
+    status: "pending" | "processing" | "completed" | "failed";
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeKey, setActiveKey] = useState<string>("changelog");
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -42,30 +37,26 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
     });
   }, [params]);
 
-  const fetchJobDetails = useCallback(async () => {
+  const fetchHeader = useCallback(async () => {
     if (!jobId) return;
-
     try {
       setIsLoading(true);
       setError(null);
-
-      const response = await fetch(`/api/jobs/${jobId}`);
+      const response = await fetch(`/api/jobs/${jobId}/overview`);
       if (!response.ok) {
         if (response.status === 404) {
           setError("Job not found");
           return;
         }
-
         const body = await response.json().catch(() => ({}));
-        throw new Error(body?.error ?? "Failed to load job details");
+        throw new Error(body?.error ?? "Failed to load job header");
       }
-
-      const jobData = (await response.json()) as JobDetails;
-      setJob(jobData);
+      const data = await response.json();
+      setHeader({ repo_full_name: data.repo_full_name, status: data.status });
     } catch (err) {
-      console.error("Failed to fetch job details:", err);
+      console.error("Failed to fetch header:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to load job details"
+        err instanceof Error ? err.message : "Failed to load job header"
       );
     } finally {
       setIsLoading(false);
@@ -74,171 +65,51 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
 
   useEffect(() => {
     if (jobId) {
-      fetchJobDetails();
+      fetchHeader();
     }
-  }, [jobId, fetchJobDetails]);
+  }, [jobId, fetchHeader]);
 
-  const handleRefresh = useCallback(async () => {
-    if (!jobId || isRefreshing) return;
-    try {
-      setIsRefreshing(true);
-      await fetchJobDetails();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [fetchJobDetails, isRefreshing, jobId]);
-
-  const parsedLogs: JobLogEntry[] = useMemo(() => {
-    if (!job?.logs) return [];
-
-    const normalizeEntry = (raw: unknown): JobLogEntry => {
-      const now = new Date().toISOString();
-
-      const getStringMessage = (value: unknown): string => {
-        if (value == null) return "";
-        if (typeof value === "string") return value;
-        if (typeof value === "number" || typeof value === "boolean") {
-          return String(value);
-        }
-        try {
-          return JSON.stringify(value);
-        } catch {
-          return String(value);
-        }
-      };
-
-      if (typeof raw === "object" && raw !== null) {
-        const obj = raw as Record<string, unknown>;
-        const level =
-          obj.level === "error" || obj.level === "warning" ? obj.level : "info";
-        const timestamp =
-          typeof obj.timestamp === "string" && obj.timestamp.length > 0
-            ? obj.timestamp
-            : now;
-
-        const messageSource =
-          obj.message ??
-          obj.logTail ??
-          obj.event ??
-          obj.stage ??
-          obj.metrics ??
-          obj;
-
-        return {
-          timestamp,
-          level,
-          message: getStringMessage(messageSource) || "",
-        } satisfies JobLogEntry;
-      }
-
-      return {
-        timestamp: now,
-        level: "info",
-        message: getStringMessage(raw),
-      } satisfies JobLogEntry;
-    };
-
-    return job.logs.map((logStr: string) => {
-      if (typeof logStr !== "string") {
-        return normalizeEntry(logStr);
-      }
-
-      try {
-        const parsed = JSON.parse(logStr);
-        return normalizeEntry(parsed);
-      } catch {
-        return {
-          timestamp: new Date().toISOString(),
-          level: "info",
-          message: logStr,
-        } satisfies JobLogEntry;
-      }
-    });
-  }, [job?.logs]);
-
-  const finalResult = useMemo<FinalChangelogResult | null>(() => {
-    const source = job?.final_changelog_result;
-    if (!source) return null;
-
-    if (typeof source === "string") {
-      try {
-        return JSON.parse(source) as FinalChangelogResult;
-      } catch (parseError) {
-        console.warn("Unable to parse final changelog result", parseError);
-        return null;
-      }
-    }
-
-    if (typeof source === "object") {
-      return source as FinalChangelogResult;
-    }
-
-    return null;
-  }, [job?.final_changelog_result]);
-
-  const finalMarkdown = useMemo(() => {
-    if (!finalResult || typeof finalResult.markdown !== "string") return "";
-    return finalResult.markdown;
-  }, [finalResult]);
-
-  const finalLogs = useMemo<FinalChangelogLogEntry[]>(() => {
-    if (!finalResult || !Array.isArray(finalResult.logs)) return [];
-    return finalResult.logs
-      .filter((entry): entry is FinalChangelogLogEntry =>
-        Boolean(entry && entry.level && entry.message && entry.timestamp)
-      )
-      .map((entry) => ({
-        level: entry.level,
-        message: entry.message,
-        timestamp: entry.timestamp,
-        details: entry.details ?? null,
-      }));
-  }, [finalResult]);
-
-  const finalMetrics = useMemo(() => {
-    if (
-      !finalResult ||
-      typeof finalResult.metrics !== "object" ||
-      finalResult.metrics === null
-    ) {
-      return undefined;
-    }
-
-    return finalResult.metrics;
-  }, [finalResult]);
+  // All per-tab data is fetched inside tab components now
 
   if (!jobId) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Spinner label="Loading..." />
+        <Skeleton className="h-16 w-16 rounded-full" />
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto py-10 px-6">
-        <div className="flex min-h-[400px] items-center justify-center">
-          <Spinner label="Loading job details..." />
+      <div className="max-w-4xl mx-auto w-full space-y-6 py-10 px-10">
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-64 rounded-lg" />
+          <Skeleton className="h-4 w-40 rounded" />
         </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-56 rounded-2xl" />
+          <Skeleton className="h-56 rounded-2xl" />
+        </div>
+        <Skeleton className="h-[420px] rounded-2xl" />
+        <Skeleton className="h-[520px] rounded-2xl" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto py-10 px-6">
+      <div className="max-w-4xl py-10 px-10">
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-          <h2 className="text-lg font-semibold mb-2">Error</h2>
+          <h2 className="mb-2 text-lg font-semibold">Error</h2>
           <p>{error}</p>
         </div>
       </div>
     );
   }
 
-  if (!job) {
+  if (!header) {
     return (
-      <div className="max-w-4xl mx-auto py-10 px-6">
+      <div className="max-w-4xl py-10 px-10">
         <div className="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-400">
           <p>Job not found</p>
         </div>
@@ -246,50 +117,34 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
     );
   }
 
-  const showRefresh = job.status === "pending" || job.status === "processing";
-
   return (
-    <div className="max-w-4xl mx-auto space-y-8 py-10 px-6">
-      <JobHeader job={job} jobId={jobId} />
+    <div className="max-w-4xl mx-auto w-full space-y-8 py-10 px-10">
+      <JobHeader
+        job={{ repo_full_name: header.repo_full_name, status: header.status }}
+        jobId={jobId}
+      />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <JobOverview job={job} />
-        <SelectedCommits commits={job.selected_commits} />
+      <div>
+        <Tabs
+          aria-label="Job detail tabs"
+          className="w-full"
+          fullWidth
+          selectedKey={activeKey}
+          onSelectionChange={(key) => setActiveKey(String(key))}
+        >
+          <Tab key="changelog" title="Changelog" className="px-1 py-6">
+            {activeKey === "changelog" && jobId && (
+              <ChangelogTab jobId={jobId} />
+            )}
+          </Tab>
+          <Tab key="overview" title="Overview" className="px-1 py-6">
+            {activeKey === "overview" && jobId && <OverviewTab jobId={jobId} />}
+          </Tab>
+          <Tab key="logs" title="Logs" className="px-1 py-6">
+            {activeKey === "logs" && jobId && <LogsTab jobId={jobId} />}
+          </Tab>
+        </Tabs>
       </div>
-
-      <ProgressAndLogs
-        job={job}
-        logs={parsedLogs}
-        onRefresh={showRefresh ? handleRefresh : undefined}
-        isRefreshing={isRefreshing}
-      />
-
-      <FinalChangelog
-        markdown={finalMarkdown}
-        logs={finalLogs}
-        metrics={finalMetrics}
-      />
-
-      <footer className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Updated {formatDateTime(job.updated_at)} • Range{" "}
-          {formatDateRange(job.date_range_start, job.date_range_end)}
-        </p>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="flat" color="default">
-            Back to Repository
-          </Button>
-          {job.status === "completed" && (
-            <>
-              <Button variant="flat" color="primary">
-                Download Changelog
-              </Button>
-              <Button color="primary">View Changelog</Button>
-            </>
-          )}
-        </div>
-      </footer>
     </div>
   );
 }

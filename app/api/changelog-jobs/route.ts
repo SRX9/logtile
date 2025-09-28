@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
         status,
         created_at,
         updated_at,
-        array_length(selected_commits, 1) as commit_count
+        changelog_title,
+        COALESCE(jsonb_array_length(selected_commits), 0) as commit_count
       FROM changelog_job
       WHERE user_id = $1
       ORDER BY created_at DESC
