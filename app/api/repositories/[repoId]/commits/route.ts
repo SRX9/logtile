@@ -84,12 +84,13 @@ function normalizeCommit(commit: GithubCommit): CommitSummary {
 
 async function getSessionUser(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
+
   return session?.user ?? null;
 }
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ repoId?: string }> }
+  { params }: { params: Promise<{ repoId?: string }> },
 ) {
   try {
     const { repoId } = await params;
@@ -97,7 +98,7 @@ export async function GET(
     if (!repoId) {
       return NextResponse.json(
         { error: "Repository id is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -115,7 +116,7 @@ export async function GET(
     if (!since || !until) {
       return NextResponse.json(
         { error: "Date range is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -128,7 +129,7 @@ export async function GET(
     ) {
       return NextResponse.json(
         { error: "Invalid date range provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -143,7 +144,7 @@ export async function GET(
     if (!repository) {
       return NextResponse.json(
         { error: "Repository not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -152,7 +153,7 @@ export async function GET(
     if (!token) {
       return NextResponse.json(
         { error: "GitHub access token unavailable" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -165,7 +166,7 @@ export async function GET(
         since: sinceDate.toISOString(),
         until: untilDate.toISOString(),
         perPage: 100,
-      }
+      },
     );
 
     const normalized = commits.map(normalizeCommit);
@@ -173,9 +174,10 @@ export async function GET(
     return NextResponse.json({ commits: normalized });
   } catch (error) {
     console.error("Failed to fetch repository commits", error);
+
     return NextResponse.json(
       { error: "Failed to fetch repository commits" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

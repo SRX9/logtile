@@ -83,6 +83,7 @@ const upsertRepositoryQuery = `
 
 async function getSessionUser(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
+
   return session?.user;
 }
 
@@ -102,9 +103,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ repositories: result.rows });
   } catch (error) {
     console.error("Failed to fetch connected repositories", error);
+
     return NextResponse.json(
       { error: "Failed to fetch connected repositories" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -133,7 +135,7 @@ export async function POST(req: NextRequest) {
     if (!repoId || !name || !owner || !htmlUrl) {
       return NextResponse.json(
         { error: "Missing required repository fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -154,15 +156,16 @@ export async function POST(req: NextRequest) {
 
     const result = await pool.query<DbRepository>(
       upsertRepositoryQuery,
-      values
+      values,
     );
 
     return NextResponse.json({ repository: result.rows[0] }, { status: 201 });
   } catch (error) {
     console.error("Failed to connect repository", error);
+
     return NextResponse.json(
       { error: "Failed to connect repository" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

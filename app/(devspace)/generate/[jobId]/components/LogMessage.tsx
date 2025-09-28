@@ -1,6 +1,6 @@
-import { useMemo } from "react";
-
 import type { JobLogEntry } from "../types";
+
+import { useMemo } from "react";
 
 function formatStageLog(log: any) {
   const { stage, event, message, details, ...otherDetails } = log;
@@ -24,13 +24,14 @@ function formatStageLog(log: any) {
       if (!logDetails.metrics) return "Filtering Commits: Analysis complete.";
       const { totalRetained, totalSkipped, reductionPercent } =
         logDetails.metrics;
+
       return `Filtering Commits: Analysis complete. Kept ${totalRetained} relevant commits and skipped ${totalSkipped} (${
         reductionPercent || 0
       }% reduction).`;
     }
     case "stage1_completed":
       return `Filtering Commits: Finished after ${Math.round(
-        (logDetails.durationMs || 0) / 1000
+        (logDetails.durationMs || 0) / 1000,
       )}s.`;
     case "stage2_started":
       return `Analyzing Impact: Looking for user-facing changes in ${
@@ -48,6 +49,7 @@ function formatStageLog(log: any) {
       return `Error in ${stage}: ${logDetails.message}`;
     default:
       if (logMessage.includes("undefined")) return `Processing...`;
+
       return `Update: ${logMessage}`;
   }
 }
@@ -56,6 +58,7 @@ export function LogMessage({ log }: { log: JobLogEntry }) {
   const content = useMemo(() => {
     try {
       const parsed = JSON.parse(log.message);
+
       if (Array.isArray(parsed)) {
         return parsed
           .map((item, index) => <div key={index}>{formatStageLog(item)}</div>)
@@ -65,11 +68,13 @@ export function LogMessage({ log }: { log: JobLogEntry }) {
       if (typeof parsed === "object" && parsed !== null) {
         return formatStageLog(parsed);
       }
+
       return log.message;
     } catch (e) {
       if (log.message === "completed") {
         return "Changelog generation has successfully completed.";
       }
+
       return log.message;
     }
   }, [log.message]);

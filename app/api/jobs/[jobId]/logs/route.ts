@@ -25,12 +25,13 @@ type LogsRow = {
 
 async function getSessionUser(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
+
   return session?.user;
 }
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ jobId?: string }> }
+  { params }: { params: Promise<{ jobId?: string }> },
 ) {
   try {
     const { jobId } = await params;
@@ -38,11 +39,12 @@ export async function GET(
     if (!jobId) {
       return NextResponse.json(
         { error: "Job ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const user = await getSessionUser(req);
+
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -67,9 +69,10 @@ export async function GET(
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch logs data", error);
+
     return NextResponse.json(
       { error: "Failed to fetch logs" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

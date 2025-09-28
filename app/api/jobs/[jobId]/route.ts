@@ -56,12 +56,13 @@ type JobDetails = {
 
 async function getSessionUser(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
+
   return session?.user;
 }
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ jobId?: string }> }
+  { params }: { params: Promise<{ jobId?: string }> },
 ) {
   try {
     const { jobId } = await params;
@@ -69,7 +70,7 @@ export async function GET(
     if (!jobId) {
       return NextResponse.json(
         { error: "Job ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -94,6 +95,7 @@ export async function GET(
 
     // Decrypt the GitHub token for the response
     let decryptedToken = null;
+
     if (job.github_token) {
       try {
         decryptedToken = decryptToken(job.github_token);
@@ -112,9 +114,10 @@ export async function GET(
     return NextResponse.json(responseJob, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch job details", error);
+
     return NextResponse.json(
       { error: "Failed to fetch job details" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

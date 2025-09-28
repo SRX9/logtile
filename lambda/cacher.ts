@@ -8,7 +8,7 @@ const redis = new Redis({
 export const setCache = async (
   key: string,
   value: string,
-  ex: number = 60 * 60 * 24 * 30
+  ex: number = 60 * 60 * 24 * 30,
 ) => {
   await redis.set(key, value, { ex });
 };

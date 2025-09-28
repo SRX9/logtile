@@ -1,3 +1,5 @@
+import { jsonrepair } from "jsonrepair";
+
 import {
   Stage3Result,
   Stage4AuditLogEntry,
@@ -6,11 +8,11 @@ import {
   ChangelogTitle,
 } from "./types";
 import { llmInferenceAzure } from "./llminference";
-import { jsonrepair } from "jsonrepair";
 
 export async function runStage4(input: Stage4Input): Promise<Stage4Result> {
   const logs: Stage4AuditLogEntry[] = [];
   const startedAt = Date.now();
+
   pushLog(logs, "info", "stage4_started");
 
   const systemPrompt = buildSystemPrompt();
@@ -19,7 +21,7 @@ export async function runStage4(input: Stage4Input): Promise<Stage4Result> {
 
   const { markdown, changelogTitle } = extractMarkdownAndTitle(
     raw || "",
-    input.metadata
+    input.metadata,
   );
 
   pushLog(logs, "info", "stage4_completed", {
@@ -43,7 +45,7 @@ function buildSystemPrompt(): string {
 
 function buildUserPrompt(
   stage3: Stage3Result,
-  meta: Stage4Input["metadata"]
+  meta: Stage4Input["metadata"],
 ): string {
   return [
     "TASK: Create a public changelog that tells users what changed from their perspective. Don't try to be too detailed. Keep it pretty high level and professional.",
@@ -75,7 +77,7 @@ function buildUserPrompt(
         metadata: meta,
       },
       null,
-      2
+      2,
     ),
     "CHANGELOG STRUCTURE:",
     [
@@ -122,7 +124,7 @@ function buildUserPrompt(
 
 function extractMarkdownAndTitle(
   raw: string,
-  meta: Stage4Input["metadata"]
+  meta: Stage4Input["metadata"],
 ): { markdown: string; changelogTitle: ChangelogTitle } {
   if (!raw) {
     // Fallback if LLM fails
@@ -144,6 +146,7 @@ function extractMarkdownAndTitle(
   // Try to parse as JSON first
   try {
     const parsed = JSON.parse(raw);
+
     if (
       parsed &&
       typeof parsed.markdown === "string" &&
@@ -170,6 +173,7 @@ function extractMarkdownAndTitle(
   try {
     const repaired = jsonrepair(raw);
     const parsed = JSON.parse(repaired);
+
     if (
       parsed &&
       typeof parsed.markdown === "string" &&
@@ -212,7 +216,7 @@ function pushLog(
   logs: Stage4AuditLogEntry[],
   level: Stage4AuditLogEntry["level"],
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): void {
   logs.push({
     timestamp: new Date().toISOString(),

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { auth } from "@/lib/auth";
 import db from "@/lib/pg";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -29,7 +31,7 @@ export async function GET(request: NextRequest) {
       WHERE user_id = $1
       ORDER BY created_at DESC
       LIMIT $2 OFFSET $3`,
-      [session.user?.id, limit, offset]
+      [session.user?.id, limit, offset],
     );
 
     return NextResponse.json({
@@ -42,9 +44,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching changelog jobs:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

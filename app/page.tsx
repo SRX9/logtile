@@ -11,14 +11,14 @@ import {
 } from "@heroui/dropdown";
 import { Navbar, NavbarContent, NavbarItem } from "@heroui/navbar";
 import { button as buttonStyles, cn } from "@heroui/theme";
-
-import { title, subtitle } from "@/components/primitives";
-import { GithubIcon, SunFilledIcon, MoonFilledIcon } from "@/components/icons";
-import { useUser } from "@/lib/context/UserContext";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import { fontHeading } from "@/config/fonts";
 import Link from "next/link";
+
+import { subtitle } from "@/components/primitives";
+import { GithubIcon, SunFilledIcon, MoonFilledIcon } from "@/components/icons";
+import { useUser } from "@/lib/context/UserContext";
+import { fontHeading } from "@/config/fonts";
 
 export default function Home() {
   const { user, signOutUser, signIn, isLoading } = useUser();
@@ -40,20 +40,20 @@ export default function Home() {
       >
         <NavbarContent justify="start">
           <NavbarItem>
-            <Link href="/" className="flex items-center">
+            <Link className="flex items-center" href="/">
               <div className="rounded-full  flex items-center justify-center">
                 <Image
-                  width={250}
-                  height={20}
-                  src="/icon1.png"
                   alt="Logo"
                   className="w-14 h-14 dark:invert"
+                  height={20}
+                  src="/icon1.png"
+                  width={250}
                 />
               </div>
               <h1
                 className={cn(
                   fontHeading.className,
-                  "font-heading text-slate-900 text-xl pt-1 -tracking-tighter dark:text-slate-100"
+                  "font-heading text-slate-900 text-xl pt-1 -tracking-tighter dark:text-slate-100",
                 )}
               >
                 Logtiles
@@ -62,35 +62,35 @@ export default function Home() {
           </NavbarItem>
         </NavbarContent>
 
-        <NavbarContent justify="center" className="hidden md:flex gap-6">
+        <NavbarContent className="hidden md:flex gap-6" justify="center">
           <NavbarItem>
             <a
-              href="#features"
               className="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              href="#features"
             >
               Features
             </a>
           </NavbarItem>
           <NavbarItem>
             <a
-              href="#how-it-works"
               className="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              href="#how-it-works"
             >
               How it works
             </a>
           </NavbarItem>
           <NavbarItem>
             <a
-              href="#preview"
               className="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              href="#preview"
             >
               Preview
             </a>
           </NavbarItem>
           <NavbarItem>
             <a
-              href="#cta"
               className="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              href="#cta"
             >
               Get started
             </a>
@@ -101,9 +101,9 @@ export default function Home() {
           <NavbarItem>
             <Button
               isIconOnly
+              className="w-9 h-9"
               variant="light"
               onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="w-9 h-9"
             >
               {theme === "light" ? (
                 <MoonFilledIcon size={18} />
@@ -158,7 +158,9 @@ export default function Home() {
           ) : (
             <NavbarItem>
               <Button
+                className="font-medium"
                 color="primary"
+                isDisabled={isLoading}
                 onPress={async () => {
                   try {
                     await signIn();
@@ -166,8 +168,6 @@ export default function Home() {
                     router.push("/login");
                   }
                 }}
-                isDisabled={isLoading}
-                className="font-medium"
               >
                 {isLoading ? "Loading..." : "Sign in with GitHub"}
               </Button>
@@ -179,22 +179,22 @@ export default function Home() {
       {/* Main Content */}
       <main className="flex-1">
         {/* Hero */}
-        <section id="hero" className="px-6 pt-12 sm:pt-16 md:pt-20">
+        <section className="px-6 pt-12 sm:pt-16 md:pt-20" id="hero">
           <div className="max-w-5xl mx-auto text-center">
             <div className="w-48 h-48 mx-auto ">
               <img
-                src="/icon1.png"
                 alt="Logo"
                 className="w-48 h-48 object-contain dark:invert"
+                src="/icon1.png"
               />
             </div>
             <h1
               className={cn(
                 fontHeading.className,
-                "text-4xl font-semibold max-w-xl text-center mx-auto tracking-tight text-balance"
+                "text-4xl font-semibold max-w-xl text-center mx-auto tracking-tight text-balance",
               )}
             >
-              Ship Changelogs in Minutes That Tells Your Product's Story
+              Ship Changelogs in Minutes That Tells Your Product{"'"}s Story
             </h1>
             <p
               className={subtitle({
@@ -209,25 +209,26 @@ export default function Home() {
               {isAuthenticated ? (
                 <>
                   <Button
-                    color="primary"
                     className={buttonStyles({
                       color: "primary",
                       radius: "full",
                       variant: "shadow",
                     })}
+                    color="primary"
                     onPress={() => router.push("/my-repositories")}
                   >
                     <GithubIcon className="w-5 h-5" />
                     Open dashboard
                   </Button>
                   <Button
-                    variant="bordered"
                     className={buttonStyles({
                       variant: "bordered",
                       radius: "full",
                     })}
+                    variant="bordered"
                     onPress={() => {
                       const el = document.getElementById("how-it-works");
+
                       el?.scrollIntoView({ behavior: "smooth" });
                     }}
                   >
@@ -237,12 +238,13 @@ export default function Home() {
               ) : (
                 <>
                   <Button
-                    color="primary"
                     className={buttonStyles({
                       color: "primary",
                       radius: "full",
                       variant: "shadow",
                     })}
+                    color="primary"
+                    isDisabled={isLoading}
                     onPress={async () => {
                       try {
                         await signIn();
@@ -250,19 +252,19 @@ export default function Home() {
                         router.push("/login");
                       }
                     }}
-                    isDisabled={isLoading}
                   >
                     <GithubIcon className="w-5 h-5" />
                     {isLoading ? "Loading..." : "Continue with GitHub"}
                   </Button>
                   <Button
-                    variant="bordered"
                     className={buttonStyles({
                       variant: "bordered",
                       radius: "full",
                     })}
+                    variant="bordered"
                     onPress={() => {
                       const el = document.getElementById("how-it-works");
+
                       el?.scrollIntoView({ behavior: "smooth" });
                     }}
                   >
@@ -275,12 +277,12 @@ export default function Home() {
         </section>
 
         {/* Features */}
-        <section id="features" className="px-6 py-16 sm:py-20">
+        <section className="px-6 py-16 sm:py-20" id="features">
           <div className="max-w-5xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/30">
                 <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 mb-3">
-                  <GithubIcon className="w-5 h-5" aria-hidden="true" />
+                  <GithubIcon aria-hidden="true" className="w-5 h-5" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-1">
                   GitHub-native
@@ -293,9 +295,9 @@ export default function Home() {
               <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/30">
                 <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 mb-3">
                   <svg
-                    viewBox="0 0 24 24"
-                    className="w-5 h-5"
                     aria-hidden="true"
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
                   >
                     <path
                       d="M12 3l2.39 4.84L20 9.27l-4 3.9.94 5.48L12 16.9 7.06 18.65 8 13.17 4 9.27l5.61-1.43L12 3z"
@@ -313,7 +315,7 @@ export default function Home() {
               </div>
               <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/30">
                 <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 mb-3">
-                  <SunFilledIcon className="w-5 h-5" aria-hidden="true" />
+                  <SunFilledIcon aria-hidden="true" className="w-5 h-5" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-1">
                   Clean, theme‑aware
@@ -328,7 +330,7 @@ export default function Home() {
         </section>
 
         {/* How it works */}
-        <section id="how-it-works" className="px-6 py-16 sm:py-20">
+        <section className="px-6 py-16 sm:py-20" id="how-it-works">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-center text-xl font-semibold text-slate-900 dark:text-slate-100 mb-8">
               How it works
@@ -360,7 +362,7 @@ export default function Home() {
         </section>
 
         {/* Preview */}
-        <section id="preview" className="px-6 py-16 sm:py-20">
+        <section className="px-6 py-16 sm:py-20" id="preview">
           <div className="max-w-5xl mx-auto">
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/30 p-6">
               <div className="mb-4">
@@ -390,7 +392,7 @@ export default function Home() {
         </section>
 
         {/* Final CTA */}
-        <section id="cta" className="px-6 pb-16 sm:pb-24">
+        <section className="px-6 pb-16 sm:pb-24" id="cta">
           <div className="max-w-5xl mx-auto">
             <div className="rounded-3xl border border-slate-200 dark:border-slate-800 p-8 sm:p-10 bg-slate-50 dark:bg-slate-900/40">
               <div className="text-center">
@@ -404,12 +406,12 @@ export default function Home() {
                 <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
                   {isAuthenticated ? (
                     <Button
-                      color="primary"
                       className={buttonStyles({
                         color: "primary",
                         radius: "full",
                         variant: "shadow",
                       })}
+                      color="primary"
                       onPress={() => router.push("/my-repositories")}
                     >
                       <GithubIcon className="w-5 h-5" />
@@ -417,12 +419,13 @@ export default function Home() {
                     </Button>
                   ) : (
                     <Button
-                      color="primary"
                       className={buttonStyles({
                         color: "primary",
                         radius: "full",
                         variant: "shadow",
                       })}
+                      color="primary"
+                      isDisabled={isLoading}
                       onPress={async () => {
                         try {
                           await signIn();
@@ -430,7 +433,6 @@ export default function Home() {
                           router.push("/login");
                         }
                       }}
-                      isDisabled={isLoading}
                     >
                       <GithubIcon className="w-5 h-5" />
                       {isLoading ? "Loading..." : "Continue with GitHub"}

@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+
 import pool from "./pg";
 
 export const auth = betterAuth({
@@ -28,6 +29,7 @@ export function encryptToken(token: string): string {
     const tokenChar = token.charCodeAt(i);
     const keyChar = key.charCodeAt(i % key.length);
     const encryptedChar = tokenChar ^ keyChar;
+
     encrypted += encryptedChar.toString(16).padStart(2, "0");
   }
 
@@ -50,6 +52,7 @@ export function decryptToken(encryptedToken: string): string {
       const encryptedChar = parseInt(encrypted.substr(i, 2), 16);
       const keyChar = key.charCodeAt(Math.floor(i / 2) % key.length);
       const decryptedChar = encryptedChar ^ keyChar;
+
       decrypted += String.fromCharCode(decryptedChar);
     }
 

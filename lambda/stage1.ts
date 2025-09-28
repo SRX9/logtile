@@ -1,5 +1,6 @@
 import axios from "axios";
 import pRetry from "p-retry";
+
 import {
   BasicCommitSummary,
   CommitCategory,
@@ -77,7 +78,7 @@ export async function runStage1(input: Stage1Input): Promise<Stage1Result> {
     fetchResult.commits.length,
     filtered,
     skipped,
-    grouped
+    grouped,
   );
 
   filtered.sort(sortByImportanceThenDate);
@@ -107,7 +108,7 @@ export async function runStage1(input: Stage1Input): Promise<Stage1Result> {
 
 function sortByImportanceThenDate(
   a: FilteredCommitSummary,
-  b: FilteredCommitSummary
+  b: FilteredCommitSummary,
 ): number {
   if (b.importanceScore !== a.importanceScore) {
     return b.importanceScore - a.importanceScore;
@@ -120,11 +121,11 @@ function sortByImportanceThenDate(
 
 async function fetchBasicCommitSummaries(
   input: Stage1Input,
-  logs: Stage1AuditLogEntry[]
+  logs: Stage1AuditLogEntry[],
 ): Promise<FetchResult> {
   const batchSize = Math.max(
     1,
-    Math.min(input.maxBatchSize ?? DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE)
+    Math.min(input.maxBatchSize ?? DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE),
   );
   const commits: BasicCommitSummary[] = [];
   const skipped: Stage1SkippedCommit[] = [];
@@ -154,7 +155,7 @@ async function fetchBasicCommitSummaries(
               "User-Agent": STAGE1_USER_AGENT,
             },
             timeout: 25000,
-          }
+          },
         ),
       {
         retries: 3,
@@ -166,13 +167,14 @@ async function fetchBasicCommitSummaries(
             error instanceof Error && typeof error.message === "string"
               ? error.message
               : "";
+
           pushLog(logs, "warn", "fetch_batch_retry", {
             attempt: error.attemptNumber,
             retriesLeft: error.retriesLeft,
             message: errorMessage,
           });
         },
-      }
+      },
     );
 
     const { data, errors } = response.data as {
@@ -185,7 +187,7 @@ async function fetchBasicCommitSummaries(
         messages: errors.map((err) => err.message),
       });
       throw new Error(
-        `GitHub GraphQL errors: ${errors.map((err) => err.message).join(" | ")}`
+        `GitHub GraphQL errors: ${errors.map((err) => err.message).join(" | ")}`,
       );
     }
 
@@ -209,6 +211,7 @@ async function fetchBasicCommitSummaries(
         pushLog(logs, "warn", "commit_skipped_missing", {
           sha,
         });
+
         return;
       }
 
@@ -222,6 +225,7 @@ async function fetchBasicCommitSummaries(
           sha,
           typename: node.__typename,
         });
+
         return;
       }
 
@@ -232,6 +236,7 @@ async function fetchBasicCommitSummaries(
         pushLog(logs, "warn", "commit_skipped_mapping_failed", {
           sha,
         });
+
         return;
       }
 
@@ -252,11 +257,12 @@ async function fetchBasicCommitSummaries(
 function buildCommitBatchQuery(count: number): string {
   const variableDefinitions = Array.from(
     { length: count },
-    (_, index) => `$oid${index}: GitObjectID!`
+    (_, index) => `$oid${index}: GitObjectID!`,
   ).join(", ");
   const commitSelections = Array.from({ length: count }, (_, index) => {
     const alias = buildCommitAlias(index);
     const variable = `$oid${index}`;
+
     return `${alias}: object(oid: ${variable}) {
       __typename
       ...CommitFields
@@ -304,7 +310,7 @@ function buildCommitBatchQuery(count: number): string {
 function buildVariables(
   owner: string,
   repo: string,
-  batch: string[]
+  batch: string[],
 ): Record<string, string> {
   return batch.reduce(
     (vars, sha, index) => ({
@@ -313,7 +319,7 @@ function buildVariables(
       name: repo,
       [`oid${index}`]: sha,
     }),
-    {} as Record<string, string>
+    {} as Record<string, string>,
   );
 }
 
@@ -324,6 +330,7 @@ function mapToBasicSummary(node: CommitGraphQlNode): BasicCommitSummary | null {
 
   let parentsTotal = 0;
   const parentsField = node.parents;
+
   if (parentsField && !Array.isArray(parentsField)) {
     if (typeof parentsField.totalCount === "number") {
       parentsTotal = parentsField.totalCount;
@@ -413,6 +420,7 @@ function evaluateCommit(commit: BasicCommitSummary): EvaluationResult {
   }
 
   const patternReason = matchFilterPatterns(normalizedMessage);
+
   if (patternReason) {
     reasons.push(patternReason);
   }
@@ -428,7 +436,7 @@ function evaluateCommit(commit: BasicCommitSummary): EvaluationResult {
 
   const category = categorizeCommit(
     normalizedMessage,
-    commit.message.toLowerCase()
+    commit.message.toLowerCase(),
   );
   const score = deriveImportanceScore(category, normalizedMessage);
 
@@ -442,6 +450,7 @@ function evaluateCommit(commit: BasicCommitSummary): EvaluationResult {
 
 function isMeaningfulMerge(commit: BasicCommitSummary): boolean {
   const message = commit.headline.toLowerCase();
+
   return (
     message.includes("release") ||
     message.includes("hotfix") ||
@@ -456,6 +465,7 @@ function isLikelyBotLogin(login?: string): boolean {
     return false;
   }
   const normalized = login.toLowerCase();
+
   return (
     normalized.endsWith("[bot]") ||
     normalized.includes("[bot]") ||
@@ -504,7 +514,7 @@ function matchFilterPatterns(message: string): string | null {
 
 function categorizeCommit(
   message: string,
-  fullMessage: string
+  fullMessage: string,
 ): CommitCategory {
   if (
     message.includes("breaking change") ||
@@ -552,7 +562,7 @@ function categorizeCommit(
 
 function deriveImportanceScore(
   category: CommitCategory,
-  message: string
+  message: string,
 ): number {
   switch (category) {
     case "breaking":
@@ -576,6 +586,7 @@ function deriveImportanceScore(
       if (message.includes("style") || message.includes("format")) {
         return 1;
       }
+
       return 5;
   }
 }
@@ -584,7 +595,7 @@ function buildMetrics(
   totalInput: number,
   retained: FilteredCommitSummary[],
   skipped: Stage1SkippedCommit[],
-  grouped: Record<CommitCategory, FilteredCommitSummary[]>
+  grouped: Record<CommitCategory, FilteredCommitSummary[]>,
 ): Stage1Metrics {
   const totalRetained = retained.length;
   const totalSkipped = skipped.length;
@@ -604,7 +615,7 @@ function buildMetrics(
       performance: 0,
       security: 0,
       other: 0,
-    } as Record<CommitCategory, number>
+    } as Record<CommitCategory, number>,
   );
 
   return {
@@ -620,7 +631,7 @@ function pushLog(
   logs: Stage1AuditLogEntry[],
   level: Stage1AuditLogEntry["level"],
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): void {
   logs.push({
     timestamp: new Date().toISOString(),

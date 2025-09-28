@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Streamdown as MarkdownRender } from "streamdown";
 
@@ -29,6 +30,7 @@ export async function generateMetadata({
       ? `${latest.repoFullName} • Changelog`
       : "Repository Changelog";
     const description = latest?.title ?? "Latest release notes and updates.";
+
     return {
       title,
       description,
@@ -61,7 +63,7 @@ export default async function RepoChangelogPage({
             <h1
               className={cn(
                 fontHeading.className,
-                "text-3xl font-semibold tracking-tight"
+                "text-3xl font-semibold tracking-tight",
               )}
             >
               Official Changelog
@@ -71,7 +73,7 @@ export default async function RepoChangelogPage({
             </p>
           </div>
           <div className="text-center text-sm text-slate-500">
-            <Link href="/my-repositories" className="underline">
+            <Link className="underline" href="/my-repositories">
               Go back to repositories
             </Link>
           </div>
@@ -92,7 +94,7 @@ export default async function RepoChangelogPage({
           <h1
             className={cn(
               fontHeading.className,
-              "text-2xl font-semibold tracking-tight"
+              "text-2xl font-semibold tracking-tight",
             )}
           >
             Changelog
@@ -119,7 +121,7 @@ export default async function RepoChangelogPage({
                 <h2
                   className={cn(
                     fontHeading.className,
-                    "text-2xl font-semibold tracking-tight"
+                    "text-2xl font-semibold tracking-tight",
                   )}
                 >
                   {item.title ?? "Changelog"}
@@ -149,7 +151,7 @@ export default async function RepoChangelogPage({
         </div>
 
         <footer className="mt-10 text-center text-sm text-slate-500">
-          <Link href={`/my-repositories/${repoId}`} className="underline">
+          <Link className="underline" href={`/my-repositories/${repoId}`}>
             Back to repository
           </Link>
         </footer>

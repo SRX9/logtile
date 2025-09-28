@@ -1,11 +1,12 @@
 "use client";
 
+import type { CommitMetadata } from "../types";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@heroui/skeleton";
 
 import { JobOverview } from "./JobOverview";
 import { SelectedCommits } from "./SelectedCommits";
-import type { CommitMetadata } from "../types";
 
 type OverviewApiResponse = {
   repo_full_name: string;
@@ -26,18 +27,25 @@ export function OverviewTab({ jobId }: { jobId: string }) {
   const fetchOverview = useCallback(async () => {
     if (fetchPromiseRef.current) {
       const d = await fetchPromiseRef.current;
+
       setData(d);
+
       return d;
     }
     const promise = (async () => {
       const res = await fetch(`/api/jobs/${jobId}/overview`);
+
       if (!res.ok) throw new Error("Failed to load overview");
+
       return (await res.json()) as OverviewApiResponse;
     })();
+
     fetchPromiseRef.current = promise;
     try {
       const d = await promise;
+
       setData(d);
+
       return d;
     } finally {
       fetchPromiseRef.current = null;

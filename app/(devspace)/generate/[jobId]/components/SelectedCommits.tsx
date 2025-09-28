@@ -1,7 +1,8 @@
 "use client";
 
-import { formatDateTime, formatCommitMessage } from "../utils";
 import type { CommitMetadata } from "../types";
+
+import { formatDateTime, formatCommitMessage } from "../utils";
 
 export type SelectedCommitsProps = {
   commits: CommitMetadata[];
@@ -56,10 +57,10 @@ function CommitItem({ commit }: { commit: CommitMetadata }) {
         </p>
         {commit.htmlUrl && (
           <a
-            href={commit.htmlUrl}
-            target="_blank"
-            rel="noreferrer"
             className="ml-4 whitespace-nowrap text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-200 dark:hover:text-primary-100"
+            href={commit.htmlUrl}
+            rel="noreferrer"
+            target="_blank"
           >
             View on GitHub
           </a>

@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { error: "GitHub access token not found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -93,12 +93,12 @@ export async function GET(req: NextRequest) {
         htmlUrl: repo.html_url,
         defaultBranch: repo.default_branch ?? null,
         visibility: repo.visibility ?? (repo.private ? "private" : "public"),
-      })
+      }),
     );
 
     const existing = await pool.query<{ repo_id: string }>(
       selectUserReposQuery,
-      [user.id, PROVIDER]
+      [user.id, PROVIDER],
     );
 
     const existingRepoIds = existing.rows.map((row) => row.repo_id);
@@ -109,9 +109,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Failed to fetch GitHub repositories", error);
+
     return NextResponse.json(
       { error: "Failed to fetch GitHub repositories" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -129,7 +130,7 @@ export async function POST(req: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { error: "GitHub access token not found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
     if (!repo) {
       return NextResponse.json(
         { error: "Repository payload missing" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -161,9 +162,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to save GitHub repository", error);
+
     return NextResponse.json(
       { error: "Failed to save GitHub repository" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

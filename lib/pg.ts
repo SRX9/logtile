@@ -4,7 +4,7 @@ const connectionString = process.env.POSTGRES_DB_URL || "";
 
 if (!connectionString) {
   throw new Error(
-    "Database connection string is missing. Please set POSTGRES_DB_URL or DATABASE_URL"
+    "Database connection string is missing. Please set POSTGRES_DB_URL or DATABASE_URL",
   );
 }
 
@@ -22,14 +22,16 @@ export default pool;
 
 export const fetchRows = async <T = any>(
   sql: string,
-  params: any[] = []
+  params: any[] = [],
 ): Promise<T[]> => {
   const { rows } = await pool.query(sql, params);
+
   return rows as T[];
 };
 
 export const fetchSingle = async <T = any>(sql: string, params: any[] = []) => {
   const rows = await fetchRows<T>(sql, params);
+
   return rows[0] as T | undefined;
 };
 
@@ -40,7 +42,8 @@ export const upsertBalanceUsage = async (data: Record<string, any>) => {
   const values = Object.values(data);
 
   const sql = `INSERT INTO chaitea.balance_usage (${columns.join(
-    ", "
+    ", ",
   )}) VALUES (${placeholders}) ON CONFLICT (user_id) DO UPDATE SET ${updates}`;
+
   await pool.query(sql, values);
 };

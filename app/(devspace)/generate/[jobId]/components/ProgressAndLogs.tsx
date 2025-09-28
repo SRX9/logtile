@@ -1,15 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import type { JobDetails, JobLogEntry } from "../types";
 
-import { Badge } from "@heroui/badge";
+import { useMemo } from "react";
 import { Button } from "@heroui/button";
 import { Progress } from "@heroui/progress";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Skeleton } from "@heroui/skeleton";
 
 import { formatDateTime } from "../utils";
-import type { JobDetails, JobLogEntry } from "../types";
+
 import { LogMessage } from "./LogMessage";
 
 export function ProgressAndLogs({
@@ -40,11 +40,11 @@ export function ProgressAndLogs({
         </div>
         {onRefresh && (
           <Button
-            variant="flat"
-            color="default"
-            onPress={onRefresh}
-            isLoading={isRefreshing}
             className="self-start md:self-auto"
+            color="default"
+            isLoading={isRefreshing}
+            variant="flat"
+            onPress={onRefresh}
           >
             Refresh
           </Button>
@@ -88,9 +88,9 @@ function StatusState({ status }: { status: JobDetails["status"] }) {
           </div>
         </div>
         <Progress
-          value={45}
-          className="mt-4"
           aria-label="Processing progress"
+          className="mt-4"
+          value={45}
         />
       </div>
     );
@@ -106,10 +106,10 @@ function StatusState({ status }: { status: JobDetails["status"] }) {
           viewBox="0 0 24 24"
         >
           <path
+            d="M5 13l4 4L19 7"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M5 13l4 4L19 7"
           />
         </svg>
         <h3 className="mt-4 text-lg font-semibold text-emerald-700 dark:text-emerald-300">
@@ -132,10 +132,10 @@ function StatusState({ status }: { status: JobDetails["status"] }) {
           viewBox="0 0 24 24"
         >
           <path
+            d="M6 18L18 6M6 6l12 12"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
           />
         </svg>
         <h3 className="mt-4 text-lg font-semibold text-rose-700 dark:text-rose-300">

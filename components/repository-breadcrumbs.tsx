@@ -34,8 +34,8 @@ export function RepositoryBreadcrumbs({
             <li key={`breadcrumb-${index}`} className="flex items-center gap-2">
               {item.href && !isCurrent ? (
                 <Link
-                  href={item.href}
                   className="font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
+                  href={item.href}
                 >
                   {item.label}
                 </Link>

@@ -1,3 +1,5 @@
+import { jsonrepair } from "jsonrepair";
+
 import {
   CommitCategory,
   Stage2CommitResult,
@@ -7,7 +9,6 @@ import {
   Stage3Result,
 } from "./types";
 import { llmInferenceAzure } from "./llminference";
-import { jsonrepair } from "jsonrepair";
 
 const CATEGORY_ORDER: CommitCategory[] = [
   "features",
@@ -47,20 +48,24 @@ export async function runStage3(input: Stage3Input): Promise<Stage3Result> {
   };
 
   let llmCalls = 0;
+
   for (const category of CATEGORY_ORDER) {
     const lines = initialByCategory[category];
+
     if (!lines.length) continue;
     const summary = await summarizeCategory(category, lines);
+
     llmCalls += 1;
     categories[category] = summary;
   }
 
   const executiveSummary = await writeExecutiveSummary(categories);
+
   llmCalls += 1;
 
   const totalBullets = (Object.values(categories) as string[][]).reduce(
     (acc, arr) => acc + arr.length,
-    0
+    0,
   );
 
   pushLog(logs, "info", "stage3_completed", {
@@ -81,7 +86,7 @@ export async function runStage3(input: Stage3Input): Promise<Stage3Result> {
 }
 
 function buildInitialChangeLines(
-  commits: Stage2CommitResult[]
+  commits: Stage2CommitResult[],
 ): Record<CommitCategory, string[]> {
   const byCategory: Record<CommitCategory, string[]> = {
     features: [],
@@ -95,6 +100,7 @@ function buildInitialChangeLines(
   for (const c of commits) {
     const cat = (c.category || "other") as CommitCategory;
     const lines: string[] = [];
+
     if (c.releaseNoteLine) {
       lines.push(c.releaseNoteLine);
     }
@@ -103,6 +109,7 @@ function buildInitialChangeLines(
         if (!u || !u.description) continue;
         const prefix =
           u.scope || (u.components && u.components[0]) || undefined;
+
         if (prefix) {
           lines.push(`${prefix}: ${u.description}`);
         } else {
@@ -126,7 +133,7 @@ function buildInitialChangeLines(
 
 async function summarizeCategory(
   category: CommitCategory,
-  changes: string[]
+  changes: string[],
 ): Promise<string[]> {
   if (!changes.length) return [];
   const systemPrompt = buildCategorySystemPrompt();
@@ -135,6 +142,7 @@ async function summarizeCategory(
   const parsed = safeParseJson(raw, { bullets: [] as string[] });
 
   let bullets: string[] = [];
+
   if (Array.isArray((parsed as any).bullets)) {
     bullets = ((parsed as any).bullets as unknown[])
       .map((b) => (typeof b === "string" ? b : ""))
@@ -142,11 +150,12 @@ async function summarizeCategory(
   } else {
     bullets = fallbackExtractBullets(raw || "");
   }
+
   return bullets.slice(0, 10);
 }
 
 async function writeExecutiveSummary(
-  categories: Record<CommitCategory, string[]>
+  categories: Record<CommitCategory, string[]>,
 ): Promise<string[]> {
   const systemPrompt =
     "You are a release manager. Craft a short executive summary (2-3 sentences) highlighting the most important changes for developers.";
@@ -160,6 +169,7 @@ async function writeExecutiveSummary(
   const arr: string[] = Array.isArray((parsed as any).executive_summary)
     ? ((parsed as any).executive_summary as string[])
     : fallbackExtractBullets(raw || "");
+
   return arr.slice(0, 3);
 }
 
@@ -175,7 +185,7 @@ function buildCategorySystemPrompt(): string {
 
 function buildCategoryUserPrompt(
   category: CommitCategory,
-  changes: string[]
+  changes: string[],
 ): string {
   return [
     `CATEGORY: ${category}`,
@@ -198,6 +208,7 @@ function safeParseJson<T>(raw: any, fallback: T): T {
   } catch {
     try {
       const repaired = jsonrepair(raw);
+
       return JSON.parse(repaired) as T;
     } catch {
       return fallback;
@@ -207,6 +218,7 @@ function safeParseJson<T>(raw: any, fallback: T): T {
 
 function fallbackExtractBullets(text: string): string[] {
   if (!text) return [];
+
   return text
     .split(/\r?\n/)
     .map((l) => l.trim())
@@ -216,20 +228,25 @@ function fallbackExtractBullets(text: string): string[] {
 
 function dedupe(items: string[]): string[] {
   const set = new Set<string>();
+
   for (const i of items) {
     const key = i.trim().toLowerCase();
+
     if (!set.has(key)) set.add(key);
   }
   // Return original-cased first occurrence order
   const seen = new Set<string>();
   const out: string[] = [];
+
   for (const i of items) {
     const key = i.trim().toLowerCase();
+
     if (!seen.has(key)) {
       seen.add(key);
       out.push(i.trim());
     }
   }
+
   return out;
 }
 
@@ -237,7 +254,7 @@ function pushLog(
   logs: Stage3AuditLogEntry[],
   level: Stage3AuditLogEntry["level"],
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): void {
   logs.push({
     timestamp: new Date().toISOString(),

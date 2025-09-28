@@ -3,7 +3,7 @@ import { AzureOpenAI } from "openai";
 
 export const llmInferenceGoogle = async (
   prompt: string,
-  systemPrompt: string
+  systemPrompt: string,
 ) => {
   const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
@@ -26,12 +26,14 @@ export const llmInferenceGoogle = async (
       ],
     },
   ];
+
   try {
     const response = await ai.models.generateContent({
       model,
       config,
       contents,
     });
+
     return response.text;
   } catch (error) {
     try {
@@ -40,9 +42,11 @@ export const llmInferenceGoogle = async (
         config,
         contents,
       });
+
       return response.text;
     } catch (error) {
       console.error("Error fetching latest info", error);
+
       return null;
     }
   }
@@ -50,12 +54,13 @@ export const llmInferenceGoogle = async (
 
 export const llmInferenceAzure = async (
   prompt: string,
-  systemPrompt: string
+  systemPrompt: string,
 ) => {
   const apiKey = process.env.AZURE_API_KEY;
   const apiVersion = "2025-01-01-preview";
   const endpoint =
     "https://soulinference5063864998.openai.azure.com/openai/deployments/gpt-5/chat/completions?api-version=2025-01-01-preview/";
+
   try {
     const modelName = "gpt-5";
     const deployment = "gpt-5";
@@ -92,9 +97,11 @@ export const llmInferenceAzure = async (
         reasoning_effort: "low",
         model: modelName,
       });
+
       return response.choices[0].message.content;
     } catch (error) {
       console.log("Error fetching latest info 2", error);
+
       return null;
     }
   }

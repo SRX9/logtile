@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+
+import { notFound } from "next/navigation";
 import { Streamdown as MarkdownRender } from "streamdown";
 
 import { getPublicChangelog } from "@/lib/changelog";
@@ -25,6 +26,7 @@ export async function generateMetadata({
     const changelog = await getPublicChangelog(jobId);
     const title = changelog.title ?? "Changelog";
     const description = changelog.subtitle ?? "Latest release notes";
+
     return {
       title,
       description,
@@ -71,7 +73,7 @@ export default async function PublicChangelogPage({
           <h1
             className={cn(
               fontHeading.className,
-              "text-4xl font-semibold tracking-tight"
+              "text-4xl font-semibold tracking-tight",
             )}
           >
             {changelog.title ?? "Changelog"}
@@ -80,7 +82,7 @@ export default async function PublicChangelogPage({
             <p
               className={cn(
                 fontHeading.className,
-                "mt-3 text-base text-slate-500"
+                "mt-3 text-base text-slate-500",
               )}
             >
               {changelog.subtitle}

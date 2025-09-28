@@ -1,10 +1,12 @@
 "use client";
 
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useState, useEffect } from "react";
-import { DevspaceSidebar } from "@/components/devspace-navbar";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@heroui/button";
 import { cn } from "@heroui/theme";
+
+import { DevspaceSidebar } from "@/components/devspace-navbar";
 
 export default function DevspaceLayout({
   children,
@@ -17,6 +19,7 @@ export default function DevspaceLayout({
   useEffect(() => {
     const checkScreenSize = () => {
       const mobile = window.innerWidth < 768; // md breakpoint
+
       setIsMobile(mobile);
       if (!mobile) {
         setIsSidebarOpen(false); // Close sidebar when switching to desktop
@@ -33,6 +36,17 @@ export default function DevspaceLayout({
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleOverlayKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (
+      event.key === "Enter" ||
+      event.key === " " ||
+      event.key === "Spacebar"
+    ) {
+      event.preventDefault();
+      setIsSidebarOpen(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background relative">
       {/* Mobile overlay */}
@@ -40,6 +54,10 @@ export default function DevspaceLayout({
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
+          onKeyDown={handleOverlayKeyDown}
+          role="button"
+          tabIndex={0}
+          aria-label="Close sidebar"
         />
       )}
 
@@ -51,8 +69,8 @@ export default function DevspaceLayout({
         )}
       >
         <DevspaceSidebar
-          onClose={() => setIsSidebarOpen(false)}
           isMobile={isMobile}
+          onClose={() => setIsSidebarOpen(false)}
         />
       </div>
 

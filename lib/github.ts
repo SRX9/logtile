@@ -9,7 +9,7 @@ type GithubRequestInit = RequestInit & {
 async function fetchFromGithub<T>(
   token: string,
   input: string,
-  init: GithubRequestInit = {}
+  init: GithubRequestInit = {},
 ): Promise<T> {
   const response = await fetch(input, {
     ...init,
@@ -24,8 +24,9 @@ async function fetchFromGithub<T>(
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => "");
+
     throw new Error(
-      `GitHub API responded with status ${response.status}: ${errorBody}`
+      `GitHub API responded with status ${response.status}: ${errorBody}`,
     );
   }
 
@@ -67,7 +68,7 @@ export type GithubRepoDetails = GithubRepo & {
 };
 
 export async function getGithubAccessTokenForUser(
-  userId: string
+  userId: string,
 ): Promise<string | null> {
   const query = `
     select "accessToken"
@@ -82,26 +83,29 @@ export async function getGithubAccessTokenForUser(
   ]);
 
   const token = result.rows[0]?.accessToken;
+
   return token ?? null;
 }
 
 export async function fetchGithubUserRepositories(token: string) {
   const repos = await fetchFromGithub<GithubRepo[]>(
     token,
-    `${GITHUB_API_BASE}/user/repos?per_page=100&affiliation=owner,collaborator,organization_member&sort=updated`
+    `${GITHUB_API_BASE}/user/repos?per_page=100&affiliation=owner,collaborator,organization_member&sort=updated`,
   );
+
   return repos;
 }
 
 export async function fetchGithubRepositoryDetails(
   token: string,
   owner: string,
-  repo: string
+  repo: string,
 ) {
   const details = await fetchFromGithub<GithubRepoDetails>(
     token,
-    `${GITHUB_API_BASE}/repos/${owner}/${repo}`
+    `${GITHUB_API_BASE}/repos/${owner}/${repo}`,
   );
+
   return details;
 }
 
@@ -117,12 +121,13 @@ export const fetchGithubRepositoryTags = async (
   token: string,
   owner: string,
   repo: string,
-  perPage = 50
+  perPage = 50,
 ) => {
   const tags = await fetchFromGithub<GithubTag[]>(
     token,
-    `${GITHUB_API_BASE}/repos/${owner}/${repo}/tags?per_page=${perPage}`
+    `${GITHUB_API_BASE}/repos/${owner}/${repo}/tags?per_page=${perPage}`,
   );
+
   return tags;
 };
 
@@ -158,13 +163,13 @@ export const fetchGithubRepositoryLatestCommit = async (
   token: string,
   owner: string,
   repo: string,
-  branch: string
+  branch: string,
 ) => {
   const commits = await fetchFromGithub<GithubCommit[]>(
     token,
     `${GITHUB_API_BASE}/repos/${owner}/${repo}/commits?sha=${encodeURIComponent(
-      branch
-    )}&per_page=1`
+      branch,
+    )}&per_page=1`,
   );
 
   return commits[0] ?? null;
@@ -184,13 +189,13 @@ export const fetchGithubCommitComparison = async (
   owner: string,
   repo: string,
   base: string,
-  head: string
+  head: string,
 ) => {
   const compare = await fetchFromGithub<GithubCompareResponse>(
     token,
     `${GITHUB_API_BASE}/repos/${owner}/${repo}/compare/${encodeURIComponent(
-      base
-    )}...${encodeURIComponent(head)}`
+      base,
+    )}...${encodeURIComponent(head)}`,
   );
 
   return compare;
@@ -207,7 +212,7 @@ export const fetchGithubRepositoryCommits = async (
   token: string,
   owner: string,
   repo: string,
-  options: FetchGithubRepositoryCommitsOptions = {}
+  options: FetchGithubRepositoryCommitsOptions = {},
 ) => {
   const url = new URL(`${GITHUB_API_BASE}/repos/${owner}/${repo}/commits`);
 
@@ -226,5 +231,6 @@ export const fetchGithubRepositoryCommits = async (
   url.searchParams.set("per_page", String(options.perPage ?? 100));
 
   const commits = await fetchFromGithub<GithubCommit[]>(token, url.toString());
+
   return commits;
 };

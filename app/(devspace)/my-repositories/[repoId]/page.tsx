@@ -9,13 +9,13 @@ import { Card, CardBody } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Chip } from "@heroui/chip";
 import { Skeleton } from "@heroui/skeleton";
-
-import { RepositoryBreadcrumbs } from "@/components/repository-breadcrumbs";
+import { FileIcon, GitBranchIcon, PencilIcon } from "lucide-react";
 
 import { ApiResponse, RepositoryChangelogResponse } from "./types";
 import { RecentChangelogs } from "./components/RecentChangelogs";
-import { buildDateRangeLabel, formatDate } from "./utils/date";
-import { FileIcon, GitBranchIcon, PencilIcon } from "lucide-react";
+import { formatDate } from "./utils/date";
+
+import { RepositoryBreadcrumbs } from "@/components/repository-breadcrumbs";
 
 export default function RepositoryDetailsPage() {
   const params = useParams();
@@ -39,6 +39,7 @@ export default function RepositoryDetailsPage() {
   useEffect(() => {
     if (!repoId) {
       notFound();
+
       return;
     }
 
@@ -61,6 +62,7 @@ export default function RepositoryDetailsPage() {
 
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
+
           throw new Error(body?.error ?? "Failed to load repository");
         }
 
@@ -103,7 +105,7 @@ export default function RepositoryDetailsPage() {
 
         console.error(err);
         setError(
-          err instanceof Error ? err.message : "Failed to load repository"
+          err instanceof Error ? err.message : "Failed to load repository",
         );
       })
       .finally(() => {
@@ -138,6 +140,7 @@ export default function RepositoryDetailsPage() {
       }
 
       const controller = new AbortController();
+
       activeChangelogRequest.current = controller;
 
       if (append) {
@@ -152,6 +155,7 @@ export default function RepositoryDetailsPage() {
 
       try {
         const params = new URLSearchParams();
+
         params.set("limit", "10");
         if (cursor) {
           params.set("cursor", cursor);
@@ -179,6 +183,7 @@ export default function RepositoryDetailsPage() {
             typeof (payload as any).error === "string"
               ? (payload as any).error
               : "Failed to load changelogs";
+
           throw new Error(errorMsg);
         }
 
@@ -198,7 +203,7 @@ export default function RepositoryDetailsPage() {
         }
 
         setChangelogError(
-          err instanceof Error ? err.message : "Failed to load changelogs"
+          err instanceof Error ? err.message : "Failed to load changelogs",
         );
       } finally {
         if (activeChangelogRequest.current === controller) {
@@ -212,7 +217,7 @@ export default function RepositoryDetailsPage() {
         }
       }
     },
-    [repoId]
+    [repoId],
   );
 
   const loadMoreChangelogs = useCallback(async () => {
@@ -391,10 +396,10 @@ export default function RepositoryDetailsPage() {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-4">
               <Avatar
+                className="border border-slate-200 dark:border-slate-700"
+                name={repository.owner}
                 size="lg"
                 src={details?.owner.avatar_url}
-                name={repository.owner}
-                className="border border-slate-200 dark:border-slate-700"
               />
               <div className="space-y-3">
                 <div className="space-y-1">
@@ -411,22 +416,22 @@ export default function RepositoryDetailsPage() {
                   </p>
                 )}
                 <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  <Chip size="sm" variant="flat" color="default">
+                  <Chip color="default" size="sm" variant="flat">
                     {repository.visibility ?? "unknown"}
                   </Chip>
-                  <Chip size="sm" variant="flat" color="default">
+                  <Chip color="default" size="sm" variant="flat">
                     <div className="flex items-center gap-1 px-1">
                       <GitBranchIcon className="w-4 h-4" />{" "}
                       {repository.default_branch ?? "n/a"}
                     </div>
                   </Chip>
                   {details?.archived && (
-                    <Chip size="sm" variant="flat" color="warning">
+                    <Chip color="warning" size="sm" variant="flat">
                       Archived
                     </Chip>
                   )}
                   {details?.disabled && (
-                    <Chip size="sm" variant="flat" color="danger">
+                    <Chip color="danger" size="sm" variant="flat">
                       Disabled
                     </Chip>
                   )}
@@ -451,7 +456,7 @@ export default function RepositoryDetailsPage() {
                   window.open(
                     `/changelog/repo/${repository.repo_id}`,
                     "_blank",
-                    "noopener,noreferrer"
+                    "noopener,noreferrer",
                   )
                 }
               >
@@ -579,19 +584,19 @@ export default function RepositoryDetailsPage() {
       )}
 
       <RecentChangelogs
+        changelogError={changelogError}
         changelogFeed={changelogFeed}
         isChangelogLoading={isChangelogLoading}
-        changelogError={changelogError}
         isLoadingMore={isLoadingMore}
+        onLoadMore={loadMoreChangelogs}
+        onRetry={loadChangelogs}
         onViewAll={() =>
           window.open(
             `/changelog/repo/${repository.repo_id}`,
             "_blank",
-            "noopener,noreferrer"
+            "noopener,noreferrer",
           )
         }
-        onRetry={loadChangelogs}
-        onLoadMore={loadMoreChangelogs}
       />
 
       {data?.warning && (
@@ -608,17 +613,17 @@ export default function RepositoryDetailsPage() {
         <span>Connected via Logtiles • Repo ID: {repository.repo_id}</span>
         <div className="flex flex-wrap gap-3">
           <Link
+            className="hover:text-primary-500"
             href={repository.html_url}
             target="_blank"
-            className="hover:text-primary-500"
           >
             GitHub repository
           </Link>
           {details?.owner?.html_url && (
             <Link
+              className="hover:text-primary-500"
               href={details.owner.html_url}
               target="_blank"
-              className="hover:text-primary-500"
             >
               Owner profile
             </Link>

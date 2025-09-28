@@ -1,9 +1,10 @@
 "use client";
 
+import type { JobDetails } from "../types";
+
 import { Badge } from "@heroui/badge";
 
 import { getStatusBadgeVariant, getStatusColor } from "../utils";
-import type { JobDetails } from "../types";
 
 type JobHeaderProps = {
   jobId: string;
@@ -34,10 +35,10 @@ export function JobHeader({ jobId, job }: JobHeaderProps) {
       </div>
 
       <Badge
-        color={getStatusColor(job.status)}
-        variant={getStatusBadgeVariant(job.status)}
-        size="lg"
         className="self-start"
+        color={getStatusColor(job.status)}
+        size="lg"
+        variant={getStatusBadgeVariant(job.status)}
       >
         {job.status.toUpperCase()}
       </Badge>

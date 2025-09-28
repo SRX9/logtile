@@ -4,6 +4,7 @@ export function formatDate(date: string | null | undefined) {
   }
 
   const parsed = new Date(date);
+
   if (Number.isNaN(parsed.getTime())) {
     return date;
   }
@@ -17,7 +18,7 @@ export function formatDate(date: string | null | undefined) {
 
 export function buildDateRangeLabel(
   start: string | null,
-  end: string | null
+  end: string | null,
 ): string {
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -30,9 +31,11 @@ export function buildDateRangeLabel(
       return null;
     }
     const parsed = new Date(value);
+
     if (Number.isNaN(parsed.getTime())) {
       return null;
     }
+
     return parsed.toLocaleDateString(undefined, options);
   };
 
@@ -43,6 +46,7 @@ export function buildDateRangeLabel(
     if (formattedStart === formattedEnd) {
       return formattedStart;
     }
+
     return `${formattedStart} – ${formattedEnd}`;
   }
 

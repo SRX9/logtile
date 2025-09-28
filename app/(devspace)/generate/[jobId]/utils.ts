@@ -4,6 +4,7 @@ export function formatDateTime(iso: string | null | undefined) {
   }
 
   const parsed = new Date(iso);
+
   if (Number.isNaN(parsed.getTime())) {
     return iso;
   }

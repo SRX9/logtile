@@ -139,10 +139,10 @@ export function RecentChangelogs({
 
     return (
       <li key={item.id} className="rounded-xl text-sm">
-        <Link href={`/generate/${item.id}`} className="block">
+        <Link className="block" href={`/generate/${item.id}`}>
           <Card
-            shadow="sm"
             className={`group overflow-hidden transition-all hover:shadow-md`}
+            shadow="sm"
           >
             <CardBody className="space-y-2 p-4 ">
               {/* Header with date and status */}
@@ -220,7 +220,7 @@ export function RecentChangelogs({
                         <CalendarDays className="h-4 w-4" />
                         {buildDateRangeLabel(
                           item.date_range_start,
-                          item.date_range_end
+                          item.date_range_end,
                         )}
                       </span>
                     ) : null}
@@ -245,10 +245,10 @@ export function RecentChangelogs({
           <p className="font-medium">Failed to load changelogs.</p>
           <p className="mt-1 text-xs">{changelogError}</p>
           <Button
-            size="sm"
-            color="primary"
-            variant="flat"
             className="mt-3"
+            color="primary"
+            size="sm"
+            variant="flat"
             onPress={() => {
               void onRetry();
             }}
@@ -278,11 +278,11 @@ export function RecentChangelogs({
 
         <div className="flex justify-center">
           <Button
-            variant="flat"
             color="default"
-            size="sm"
             isDisabled={!changelogFeed.pagination.hasMore}
             isLoading={isLoadingMore}
+            size="sm"
+            variant="flat"
             onPress={() => {
               void onLoadMore();
             }}

@@ -3,9 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
+import Image from "next/image";
+
 import { GithubIcon } from "@/components/icons";
 import { useUser } from "@/lib/context/UserContext";
-import Image from "next/image";
 
 export default function LoginPage() {
   const { user, isLoading, signIn } = useUser();
@@ -21,7 +22,7 @@ export default function LoginPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 dark:border-slate-100"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 dark:border-slate-100" />
       </div>
     );
   }
@@ -37,11 +38,11 @@ export default function LoginPage() {
         {/* Logo Section */}
         <div className="flex justify-center mb-12">
           <Image
-            src="/icon1.png"
             alt="Logo"
-            width={500}
-            height={500}
             className="w-48 h-48 rounded-full object-contain dark:invert"
+            height={500}
+            src="/icon1.png"
+            width={500}
           />
         </div>
 
@@ -58,6 +59,8 @@ export default function LoginPage() {
         {/* GitHub Sign In Button */}
         <div className="space-y-4">
           <Button
+            className="w-full h-14 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl font-medium text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            disabled={isLoading}
             onClick={async () => {
               try {
                 setSignInError(null);
@@ -67,8 +70,6 @@ export default function LoginPage() {
                 setSignInError("Failed to initiate sign in. Please try again.");
               }
             }}
-            className="w-full h-14 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl font-medium text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            disabled={isLoading}
           >
             <GithubIcon className="w-6 h-6 mr-3" />
             {isLoading ? "Signing in..." : "Continue with GitHub"}
@@ -89,9 +90,9 @@ export default function LoginPage() {
           </div>
         </div>
         {/* Decorative Elements */}
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-blue-400 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-purple-400 rounded-full opacity-20 animate-pulse delay-1000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-1 h-1 bg-green-400 rounded-full opacity-20 animate-pulse delay-500"></div>
+        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-blue-400 rounded-full opacity-20 animate-pulse" />
+        <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-purple-400 rounded-full opacity-20 animate-pulse delay-1000" />
+        <div className="absolute bottom-1/4 left-1/3 w-1 h-1 bg-green-400 rounded-full opacity-20 animate-pulse delay-500" />
       </div>
     </div>
   );

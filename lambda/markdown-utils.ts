@@ -20,6 +20,7 @@ export function compressMarkdownWhitespace(markdown: string): string {
   const processed = segments
     .map((segment) => {
       const isCodeBlock = segment.startsWith("```");
+
       if (isCodeBlock) return segment; // keep code blocks untouched
 
       // Normalize whitespace in non-code segments

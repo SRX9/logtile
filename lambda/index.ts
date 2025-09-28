@@ -1,6 +1,5 @@
 import "dotenv/config";
 import { query } from "./db";
-import axios from "axios";
 import { decryptToken } from "./crypto";
 import {
   Commit,
@@ -26,7 +25,7 @@ import { runStage3 } from "./stage3";
 import { runStage4 } from "./stage4";
 
 export const handler = async (
-  event: any
+  event: any,
 ): Promise<{ status: string; output_file?: string }> => {
   try {
     const eventData =
@@ -65,6 +64,7 @@ export const handler = async (
     }
 
     const job: ChangelogJob = jobResult.rows[0];
+
     console.log(`Fetched job: ${job.repo_full_name}`);
 
     const encryptedToken = job.github_token;
@@ -75,6 +75,7 @@ export const handler = async (
     }
 
     let githubToken: string;
+
     try {
       githubToken = decryptToken(encryptedToken);
       console.log("Token decrypted successfully");
@@ -84,6 +85,7 @@ export const handler = async (
     }
 
     const { valid: commitShas, invalid } = extractCommitShas(selectedCommits);
+
     if (commitShas.length === 0) {
       throw new Error("No valid commit SHAs provided for Stage1 processing");
     }
@@ -101,6 +103,7 @@ export const handler = async (
     await updateJobStatus(jobId, "processing");
 
     let stage1Result: Stage1Result;
+
     try {
       stage1Result = await runStage1({
         owner: job.repo_owner,
@@ -121,27 +124,29 @@ export const handler = async (
     await appendJobLog(jobId, buildStage1JobLog(stage1Result));
 
     const stage1Summaries = new Map<string, FilteredCommitSummary>(
-      stage1Result.commitsForProcessing.map((commit) => [commit.sha, commit])
+      stage1Result.commitsForProcessing.map((commit) => [commit.sha, commit]),
     );
 
     const commitsToProcess = stage1Result.commitsForProcessing.map(
-      (commit) => commit.sha
+      (commit) => commit.sha,
     );
 
     if (commitsToProcess.length === 0) {
       console.log(
-        "Stage1 filtered out all commits. No further processing needed."
+        "Stage1 filtered out all commits. No further processing needed.",
       );
 
       const outputData = buildOutputData(job, stage1Result, commitShas.length);
+
       console.log("Changelog data:", JSON.stringify(outputData, null, 2));
 
       await updateJobStatus(jobId, "completed");
+
       return { status: "completed" };
     }
 
     console.log(
-      `Stage1 retained ${commitsToProcess.length} commits (from ${commitShas.length}). Proceeding with commit detail fetch.`
+      `Stage1 retained ${commitsToProcess.length} commits (from ${commitShas.length}). Proceeding with commit detail fetch.`,
     );
 
     const allCommitData: CommitWithSummary[] = [];
@@ -149,13 +154,15 @@ export const handler = async (
 
     for (let i = 0; i < commitsToProcess.length; i += batchSize) {
       const batch = commitsToProcess.slice(i, i + batchSize);
+
       console.log(
-        `Processing batch ${Math.floor(i / batchSize) + 1} with ${batch.length} commits`
+        `Processing batch ${Math.floor(i / batchSize) + 1} with ${batch.length} commits`,
       );
 
       const batchPromises = batch.map(async (commitSha) => {
         if (!commitSha) {
           console.warn("Skipping commit without SHA");
+
           return null;
         }
 
@@ -164,15 +171,18 @@ export const handler = async (
             job.repo_owner,
             job.repo_name,
             commitSha,
-            githubToken
+            githubToken,
           );
           const summary = stage1Summaries.get(commitSha);
+
           if (!summary) {
             console.warn(
-              `Summary not found for commit ${commitSha}, skipping.`
+              `Summary not found for commit ${commitSha}, skipping.`,
             );
+
             return null;
           }
+
           return { summary, details: commitDetails };
         } catch (error) {
           console.error(`Error fetching commit ${commitSha}:`, error);
@@ -183,13 +193,14 @@ export const handler = async (
             sha: commitSha,
             message: error instanceof Error ? error.message : String(error),
           });
+
           return null;
         }
       });
 
       const batchResults = await Promise.all(batchPromises);
       const validResults = batchResults.filter(
-        (result): result is CommitWithSummary => result !== null
+        (result): result is CommitWithSummary => result !== null,
       );
 
       allCommitData.push(...validResults);
@@ -201,6 +212,7 @@ export const handler = async (
 
     // Stage 2: Parallel commit processing focusing on user-facing impact
     let stage2Result;
+
     try {
       stage2Result = await runStage2({ commits: allCommitData });
       await appendJobLog(jobId, buildStage2JobLog(stage2Result));
@@ -218,6 +230,7 @@ export const handler = async (
 
     // Stage 3: Smart summarization into categories + executive summary
     let stage3Result;
+
     try {
       stage3Result = await runStage3({ commits: stage2Result.commitResults });
       await appendJobLog(jobId, {
@@ -240,14 +253,16 @@ export const handler = async (
 
     // Stage 4: Final changelog assembly (markdown)
     let stage4Result;
+
     try {
       const contributors: string[] = Array.from(
         new Set(
           allCommitData
             .map((c) => c.summary.authorLogin || c.details.commit.author.name)
-            .filter(Boolean)
-        )
+            .filter(Boolean),
+        ),
       ) as string[];
+
       stage4Result = await runStage4({
         stage3: stage3Result,
         metadata: {
@@ -284,8 +299,9 @@ export const handler = async (
         commitShas.length,
         stage2Result,
         stage3Result,
-        stage4Result
+        stage4Result,
       );
+
       await saveOutputAndFinal(jobId, outputData, stage4Result);
       // Save changelog title separately
       await saveChangelogTitle(jobId, stage4Result.changelogTitle);
@@ -305,7 +321,7 @@ export const handler = async (
       try {
         await query(
           "UPDATE changelog_job SET status = 'failed', logs = array_append(logs, $2), updated_at = NOW() WHERE id = $1",
-          [(error as any).jobId, (error as any).message || String(error)]
+          [(error as any).jobId, (error as any).message || String(error)],
         );
       } catch (updateError) {
         console.error("Error updating job status:", updateError);

@@ -1,11 +1,11 @@
 "use client";
 
+import type { ChangelogTitle, FinalChangelogMetrics } from "../types";
+
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Check, Copy } from "lucide-react";
 import { Streamdown as MarkdownRender } from "streamdown";
-
-import type { ChangelogTitle, FinalChangelogMetrics } from "../types";
 
 // TODO: Add optional generation log list for transparency in future iterations.
 
@@ -51,6 +51,7 @@ export function FinalChangelog({
     }
     if (!jobId) {
       setPublicUrl(null);
+
       return;
     }
     setPublicUrl(`${window.location.origin}/changelog/${jobId}`);
@@ -112,33 +113,33 @@ export function FinalChangelog({
               )}
             </div>
 
-            <MetadataGrid items={metadataItems} hasTitle={Boolean(title)} />
+            <MetadataGrid hasTitle={Boolean(title)} items={metadataItems} />
           </div>
           {hasMarkdown && (
             <div className="flex flex-col gap-2  lg:flex-none">
               <Button
                 color="primary"
-                onClick={onOpenPublicPage}
                 isDisabled={!publicUrl}
+                onClick={onOpenPublicPage}
               >
                 View Changelog Page
               </Button>
               <Button
-                variant="bordered"
-                onClick={onCopyPublicLink}
                 isDisabled={!publicUrl}
                 startContent={
                   isLinkCopied ? <Check size={16} /> : <Copy size={16} />
                 }
+                variant="bordered"
+                onClick={onCopyPublicLink}
               >
                 {isLinkCopied ? "Link Copied" : "Copy changelog URL"}
               </Button>
               <Button
-                variant="bordered"
-                onClick={onCopy}
                 startContent={
                   isCopied ? <Check size={16} /> : <Copy size={16} />
                 }
+                variant="bordered"
+                onClick={onCopy}
               >
                 {isCopied ? "Copied" : "Copy markdown"}
               </Button>
@@ -200,15 +201,15 @@ function EmptyMarkdown() {
     <div className="space-y-3 rounded-lg border border-dashed border-slate-300 px-6 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
       <svg
         className="mx-auto h-10 w-10 text-slate-300"
-        viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
+        viewBox="0 0 24 24"
       >
         <path
+          d="M8 4H6a2 2 0 00-2 2v12m12-14h2a2 2 0 012 2v12m-4 2H8m8-18v4m-8-4v4"
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={1.5}
-          d="M8 4H6a2 2 0 00-2 2v12m12-14h2a2 2 0 012 2v12m-4 2H8m8-18v4m-8-4v4"
         />
       </svg>
       <p className="font-medium">No markdown produced yet</p>

@@ -56,6 +56,7 @@ export function RepositoryConnectDrawer({
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
+
         throw new Error(body?.error ?? "Unable to load GitHub repositories");
       }
 
@@ -72,7 +73,7 @@ export function RepositoryConnectDrawer({
       setAvailableError(
         error instanceof Error
           ? error.message
-          : "Failed to load GitHub repositories"
+          : "Failed to load GitHub repositories",
       );
     } finally {
       setIsLoadingAvailable(false);
@@ -82,6 +83,7 @@ export function RepositoryConnectDrawer({
   useEffect(() => {
     if (!isOpen) {
       hasFetchedAvailableRepos.current = false;
+
       return;
     }
 
@@ -109,12 +111,15 @@ export function RepositoryConnectDrawer({
 
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
+
           throw new Error(body?.error ?? "Failed to connect repository");
         }
 
         setConnectedRepoIds((prev) => {
           const updated = Array.from(new Set([...prev, String(repo.id)]));
+
           onSyncConnectedRepoIds?.(updated);
+
           return updated;
         });
         await onRepositoryConnected();
@@ -123,13 +128,13 @@ export function RepositoryConnectDrawer({
         setAvailableError(
           error instanceof Error
             ? error.message
-            : "Failed to connect repository"
+            : "Failed to connect repository",
         );
       } finally {
         setConnectingRepoId(null);
       }
     },
-    [onRepositoryConnected]
+    [onRepositoryConnected],
   );
 
   const availableReposToDisplay = useMemo(() => {
@@ -142,11 +147,11 @@ export function RepositoryConnectDrawer({
 
   const isRepoConnected = useCallback(
     (repoId: number | string) => connectedRepoIds.includes(String(repoId)),
-    [connectedRepoIds]
+    [connectedRepoIds],
   );
 
   return (
-    <Drawer isOpen={isOpen} onClose={onClose} placement="right" size="lg">
+    <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
       <DrawerContent>
         <DrawerHeader className="flex flex-col gap-1">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -180,7 +185,7 @@ export function RepositoryConnectDrawer({
                     window.open(
                       "/api/github/org-access",
                       "_blank",
-                      "noopener,noreferrer"
+                      "noopener,noreferrer",
                     )
                   }
                 >
@@ -197,14 +202,14 @@ export function RepositoryConnectDrawer({
               <div className="mt-4 flex flex-col sm:flex-row gap-2">
                 {/* Reauthorize GitHub removed */}
                 <Button
+                  className="w-full sm:w-auto"
                   size="sm"
                   variant="flat"
-                  className="w-full sm:w-auto"
                   onPress={() =>
                     window.open(
                       "/api/github/org-access",
                       "_blank",
-                      "noopener,noreferrer"
+                      "noopener,noreferrer",
                     )
                   }
                 >
@@ -215,6 +220,7 @@ export function RepositoryConnectDrawer({
           ) : (
             availableReposToDisplay.map((repo) => {
               const connected = isRepoConnected(repo.id);
+
               return (
                 <div
                   key={repo.id}
@@ -233,13 +239,13 @@ export function RepositoryConnectDrawer({
                     </div>
                     <Button
                       color={connected ? "default" : "primary"}
-                      variant={connected ? "flat" : "solid"}
+                      isDisabled={connected}
+                      isLoading={connectingRepoId === repo.id}
                       size="sm"
+                      variant={connected ? "flat" : "solid"}
                       onClick={() =>
                         !connected && handleConnectRepository(repo)
                       }
-                      isDisabled={connected}
-                      isLoading={connectingRepoId === repo.id}
                     >
                       {connected ? "Connected" : "Connect"}
                     </Button>
@@ -260,10 +266,10 @@ export function RepositoryConnectDrawer({
                       </span>
                     </div>
                     <a
-                      href={repo.htmlUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-200 dark:hover:text-primary-100"
+                      href={repo.htmlUrl}
+                      rel="noopener noreferrer"
+                      target="_blank"
                     >
                       View on GitHub
                     </a>

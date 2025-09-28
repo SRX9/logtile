@@ -224,7 +224,7 @@ export default function MyChangelogsPage() {
                             <span className="inline-flex items-center gap-1">
                               <CalendarRangeIcon className="w-4 h-4" />
                               {new Date(
-                                job.changelog_title.date
+                                job.changelog_title.date,
                               ).toLocaleDateString("en-US", {
                                 year: "numeric",
                                 month: "short",

@@ -1,5 +1,7 @@
 "use client";
 
+import type { JobStatus } from "./types";
+
 import { useEffect, useState, useCallback, useRef } from "react";
 import { notFound } from "next/navigation";
 import { Tabs, Tab } from "@heroui/tabs";
@@ -9,7 +11,6 @@ import { JobHeader } from "./components/JobHeader";
 import { ChangelogTab } from "./components/ChangelogTab";
 import { OverviewTab } from "./components/OverviewTab";
 import { LogsTab } from "./components/LogsTab";
-import type { JobStatus } from "./types";
 
 type GenerateJobPageProps = {
   params: Promise<{
@@ -31,6 +32,7 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
   useEffect(() => {
     params.then((resolvedParams) => {
       const id = resolvedParams.jobId;
+
       if (id) {
         setJobId(id);
       } else {
@@ -45,16 +47,20 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
       setIsLoading(true);
       setError(null);
       const response = await fetch(`/api/jobs/${jobId}/overview`);
+
       if (!response.ok) {
         if (response.status === 404) {
           setError("Job not found");
+
           return;
         }
         const body = await response.json().catch(() => ({}));
+
         throw new Error(body?.error ?? "Failed to load job header");
       }
       const data = await response.json();
       const statusToUse = latestStatusRef.current ?? data.status;
+
       latestStatusRef.current = statusToUse;
       setHeader({
         repo_full_name: data.repo_full_name,
@@ -63,7 +69,7 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
     } catch (err) {
       console.error("Failed to fetch header:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to load job header"
+        err instanceof Error ? err.message : "Failed to load job header",
       );
     } finally {
       setIsLoading(false);
@@ -85,6 +91,7 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
       if (prev.status === nextStatus) {
         return prev;
       }
+
       return { ...prev, status: nextStatus };
     });
   }, []);
@@ -146,21 +153,21 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
 
       <div>
         <Tabs
+          fullWidth
           aria-label="Job detail tabs"
           className="w-full"
-          fullWidth
           selectedKey={activeKey}
           onSelectionChange={(key) => setActiveKey(String(key))}
         >
-          <Tab key="changelog" title="Changelog" className="px-1 py-6">
+          <Tab key="changelog" className="px-1 py-6" title="Changelog">
             {activeKey === "changelog" && jobId && (
               <ChangelogTab jobId={jobId} onStatusChange={handleStatusUpdate} />
             )}
           </Tab>
-          <Tab key="overview" title="Overview" className="px-1 py-6">
+          <Tab key="overview" className="px-1 py-6" title="Overview">
             {activeKey === "overview" && jobId && <OverviewTab jobId={jobId} />}
           </Tab>
-          <Tab key="logs" title="Logs" className="px-1 py-6">
+          <Tab key="logs" className="px-1 py-6" title="Logs">
             {activeKey === "logs" && jobId && (
               <LogsTab jobId={jobId} onStatusChange={handleStatusUpdate} />
             )}

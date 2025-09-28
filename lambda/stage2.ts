@@ -1,3 +1,5 @@
+import { jsonrepair } from "jsonrepair";
+
 import {
   CommitCategory,
   CommitWithSummary,
@@ -11,7 +13,6 @@ import {
   UserFacingChange,
 } from "./types";
 import { llmInferenceAzure } from "./llminference";
-import { jsonrepair } from "jsonrepair";
 
 const MAX_DIFF_LINES_PER_COMMIT = 500;
 
@@ -40,9 +41,11 @@ export async function runStage2(input: Stage2Input): Promise<Stage2Result> {
 
   if (strategy === "batch") {
     const batchSize = 4;
+
     for (let i = 0; i < input.commits.length; i += batchSize) {
       const batch = input.commits.slice(i, i + batchSize);
       const prepared = batch.map((c) => prepareCommitForAnalysis(c));
+
       prepared.forEach((p) => {
         if (p.tier === 1) metrics.tier1 += 1;
         else if (p.tier === 2) metrics.tier2 += 1;
@@ -50,14 +53,17 @@ export async function runStage2(input: Stage2Input): Promise<Stage2Result> {
       });
 
       const analysis = await analyzeCommits(prepared);
+
       metrics.llmCalls += 1;
       metrics.batchedCalls += 1;
 
       const written = await writeReleaseLines(analysis);
+
       metrics.llmCalls += 1;
       metrics.batchedCalls += 1;
 
       const merged = mergeAnalysisAndWriting(prepared, analysis, written);
+
       results.push(...merged);
       metrics.analyzedCommits += merged.length;
     }
@@ -79,27 +85,34 @@ export async function runStage2(input: Stage2Input): Promise<Stage2Result> {
     // Tier 1: individual, full diff
     for (const commit of tier1) {
       const analysis = await analyzeCommits([commit]);
+
       metrics.llmCalls += 1;
       metrics.individualCalls += 1;
       const writing = await writeReleaseLines(analysis);
+
       metrics.llmCalls += 1;
       metrics.individualCalls += 1;
       const merged = mergeAnalysisAndWriting([commit], analysis, writing);
+
       results.push(...merged);
       metrics.analyzedCommits += 1;
     }
 
     // Tier 2: quick, message + filenames only, batch in groups of 15
     const quickBatchSize = 15;
+
     for (let i = 0; i < tier2.length; i += quickBatchSize) {
       const batch = tier2.slice(i, i + quickBatchSize);
       const analysis = await analyzeCommits(batch, { quick: true });
+
       metrics.llmCalls += 1;
       metrics.batchedCalls += 1;
       const writing = await writeReleaseLines(analysis);
+
       metrics.llmCalls += 1;
       metrics.batchedCalls += 1;
       const merged = mergeAnalysisAndWriting(batch, analysis, writing);
+
       results.push(...merged);
       metrics.analyzedCommits += merged.length;
     }
@@ -157,11 +170,13 @@ interface PreparedCommitInput {
 function determineTier(score: number): Stage2Tier {
   if (score >= 7) return 1;
   if (score >= 4) return 2;
+
   return 3;
 }
 
 function isTestFile(filename: string): boolean {
   const lower = filename.toLowerCase();
+
   return (
     /\btest\b|\bspec\b/.test(lower) ||
     lower.includes("/__tests__/") ||
@@ -177,13 +192,14 @@ function isTestFile(filename: string): boolean {
 }
 
 function prepareCommitForAnalysis(
-  commit: CommitWithSummary
+  commit: CommitWithSummary,
 ): PreparedCommitInput {
   const tier = determineTier(commit.summary.importanceScore);
   const { diff, filesConsidered, skippedFiles, truncatedLines } = buildDiff(
     commit,
-    MAX_DIFF_LINES_PER_COMMIT
+    MAX_DIFF_LINES_PER_COMMIT,
   );
+
   return {
     sha: commit.summary.sha,
     title:
@@ -202,21 +218,24 @@ function prepareCommitForAnalysis(
 }
 
 function prepareCommitForQuickAnalysis(
-  commit: CommitWithSummary
+  commit: CommitWithSummary,
 ): PreparedCommitInput {
   const tier = determineTier(commit.summary.importanceScore);
   const filesConsidered: string[] = [];
   const skippedFiles: string[] = [];
   const fileList = commit.details.files || [];
+
   for (const f of fileList) {
     if (!f || !f.filename) continue;
     const name = f.filename;
+
     if (isTestFile(name)) {
       skippedFiles.push(name);
     } else {
       filesConsidered.push(name);
     }
   }
+
   return {
     sha: commit.summary.sha,
     title:
@@ -235,7 +254,7 @@ function prepareCommitForQuickAnalysis(
 
 function buildDiff(
   commit: CommitWithSummary,
-  maxLines: number
+  maxLines: number,
 ): {
   diff: string;
   filesConsidered: string[];
@@ -252,6 +271,7 @@ function buildDiff(
   for (const file of files) {
     if (!file || !file.filename) continue;
     const name = file.filename;
+
     if (isTestFile(name)) {
       skippedFiles.push(name);
       continue;
@@ -259,9 +279,10 @@ function buildDiff(
     filesConsidered.push(name);
     if (!file.patch) continue;
     const patchLines = file.patch.split(/\r?\n/);
+
     if (patchLines.length > linesLeft) {
       parts.push(
-        `--- ${name} (truncated)\n` + patchLines.slice(0, linesLeft).join("\n")
+        `--- ${name} (truncated)\n` + patchLines.slice(0, linesLeft).join("\n"),
       );
       truncated += patchLines.length - linesLeft;
       linesLeft = 0;
@@ -282,7 +303,7 @@ function buildDiff(
 
 async function analyzeCommits(
   commits: PreparedCommitInput[],
-  options?: { quick?: boolean }
+  options?: { quick?: boolean },
 ): Promise<
   Array<{
     sha: string;
@@ -308,7 +329,7 @@ async function analyzeCommits(
         (c: any) =>
           c &&
           typeof c.sha === "string" &&
-          typeof c.user_facing_change === "string"
+          typeof c.user_facing_change === "string",
       )
       .map((c: any) => ({
         sha: c.sha,
@@ -337,7 +358,7 @@ async function writeReleaseLines(
     sha: string;
     analysis_summary?: string;
     user_facing_changes: UserFacingChange[];
-  }>
+  }>,
 ): Promise<Array<{ sha: string; release_note_line?: string }>> {
   const systemPrompt = buildWriterSystemPrompt();
   const userPrompt = buildWriterUserPrompt(analysis);
@@ -345,6 +366,7 @@ async function writeReleaseLines(
   const json = safeParseJson(raw, { commits: [] });
   const items: Array<{ sha: string; release_note_line?: string }> =
     Array.isArray(json?.commits) ? json.commits : [];
+
   return items;
 }
 
@@ -355,13 +377,15 @@ function mergeAnalysisAndWriting(
     analysis_summary?: string;
     user_facing_changes: UserFacingChange[];
   }>,
-  writing: Array<{ sha: string; release_note_line?: string }>
+  writing: Array<{ sha: string; release_note_line?: string }>,
 ): Stage2CommitResult[] {
   const byShaAnalysis = new Map(analysis.map((a) => [a.sha, a]));
   const byShaWriting = new Map(writing.map((w) => [w.sha, w]));
+
   return prepared.map((p) => {
     const a = byShaAnalysis.get(p.sha);
     const w = byShaWriting.get(p.sha);
+
     return {
       sha: p.sha,
       title: p.title,
@@ -392,7 +416,7 @@ function buildAnalysisSystemPrompt(): string {
 
 function buildAnalysisUserPrompt(
   commits: PreparedCommitInput[],
-  quick: boolean
+  quick: boolean,
 ): string {
   const schema = {
     commits: [
@@ -425,12 +449,14 @@ function buildAnalysisUserPrompt(
       files_considered: c.filesConsidered,
       skipped_files: c.skippedFiles,
     } as Record<string, unknown>;
+
     if (!quick) {
       base["diff"] = c.diff ?? "";
       base["message"] = c.message ?? "";
     } else {
       base["message"] = c.message ?? "";
     }
+
     return base;
   });
 
@@ -474,11 +500,12 @@ function buildWriterUserPrompt(
   analysis: Array<{
     sha: string;
     user_facing_changes: UserFacingChange[];
-  }>
+  }>,
 ): string {
   const schema = {
     commits: [{ sha: "string", release_note_line: "string, one sentence" }],
   };
+
   return [
     "Create a single release-note line per commit based on the extracted user-facing changes.",
     "Prefer the most important change if multiple exist. Keep it under 16 words.",
@@ -495,6 +522,7 @@ function safeParseJson<T>(raw: any, fallback: T): T {
   } catch {
     try {
       const repaired = jsonrepair(raw);
+
       return JSON.parse(repaired) as T;
     } catch {
       return fallback;
@@ -506,7 +534,7 @@ function pushLog(
   logs: Stage2AuditLogEntry[],
   level: Stage2AuditLogEntry["level"],
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): void {
   logs.push({
     timestamp: new Date().toISOString(),

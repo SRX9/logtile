@@ -1,9 +1,10 @@
 "use client";
 
+import type { JobLogEntry, JobStatus } from "../types";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ProgressAndLogs } from "./ProgressAndLogs";
-import type { JobLogEntry, JobStatus } from "../types";
 
 type LogsApiResponse = {
   status: "pending" | "processing" | "completed" | "failed";
@@ -59,6 +60,7 @@ export function LogsTab({
           obj.stage ??
           obj.metrics ??
           obj;
+
         return { timestamp, level, message: getStringMessage(messageSource) };
       }
 
@@ -69,6 +71,7 @@ export function LogsTab({
       if (typeof logStr !== "string") return normalizeEntry(logStr);
       try {
         const parsed = JSON.parse(logStr);
+
         return normalizeEntry(parsed);
       } catch {
         return {
@@ -85,21 +88,28 @@ export function LogsTab({
   const fetchLogs = useCallback(async () => {
     if (fetchPromiseRef.current) {
       const data = await fetchPromiseRef.current;
+
       setStatus(data.status);
       setRawLogs(data.logs ?? []);
+
       return data;
     }
     const promise = (async () => {
       const res = await fetch(`/api/jobs/${jobId}/logs`);
+
       if (!res.ok) throw new Error("Failed to load logs");
+
       return (await res.json()) as LogsApiResponse;
     })();
+
     fetchPromiseRef.current = promise;
     try {
       const data = await promise;
+
       setStatus(data.status);
       setRawLogs(data.logs ?? []);
       onStatusChange?.(data.status);
+
       return data;
     } finally {
       fetchPromiseRef.current = null;
@@ -126,6 +136,7 @@ export function LogsTab({
 
     if (!isPending) {
       stopPolling();
+
       return;
     }
 
@@ -138,13 +149,16 @@ export function LogsTab({
     pollingTimerRef.current = setInterval(async () => {
       const startedAt = pollingStartMsRef.current ?? Date.now();
       const elapsed = Date.now() - startedAt;
+
       if (elapsed >= 5 * 60 * 1000) {
         stopPolling();
+
         return;
       }
 
       try {
         const next = await fetchLogs();
+
         if (next.status !== "pending" && next.status !== "processing") {
           stopPolling();
         }
@@ -170,10 +184,10 @@ export function LogsTab({
 
   return (
     <ProgressAndLogs
-      status={status}
-      logs={logs}
-      onRefresh={onRefresh}
       isRefreshing={isRefreshing}
+      logs={logs}
+      status={status}
+      onRefresh={onRefresh}
     />
   );
 }

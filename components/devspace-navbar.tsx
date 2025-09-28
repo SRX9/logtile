@@ -12,12 +12,12 @@ import {
 } from "@heroui/dropdown";
 import { Navbar, NavbarContent, NavbarItem } from "@heroui/navbar";
 import { FolderOpen, FileText, X } from "lucide-react";
-
 import { cn } from "@heroui/theme";
+import { useTheme } from "next-themes";
+
 import { fontHeading } from "@/config/fonts";
 import { MoonFilledIcon, SunFilledIcon } from "@/components/icons";
 import { useUser } from "@/lib/context/UserContext";
-import { useTheme } from "next-themes";
 
 export function DevspaceNavbar() {
   const { user, signOutUser } = useUser();
@@ -38,17 +38,17 @@ export function DevspaceNavbar() {
           <div className="flex items-center gap-2">
             <div className="rounded-full flex items-center justify-center">
               <Image
-                width={250}
-                height={20}
-                src="/icon1.png"
                 alt="Logo"
                 className="w-14 h-14 dark:invert"
+                height={20}
+                src="/icon1.png"
+                width={250}
               />
             </div>
             <h1
               className={cn(
                 fontHeading.className,
-                "font-heading text-slate-900 text-xl pt-1 -tracking-tighter dark:text-slate-100"
+                "font-heading text-slate-900 text-xl pt-1 -tracking-tighter dark:text-slate-100",
               )}
             >
               Logtiles
@@ -57,7 +57,7 @@ export function DevspaceNavbar() {
         </NavbarItem>
       </NavbarContent>
 
-      <NavbarContent justify="end" className="items-center gap-2">
+      <NavbarContent className="items-center gap-2" justify="end">
         <NavbarItem>
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
@@ -129,6 +129,7 @@ export function DevspaceSidebar({
     if (href === "/my-changelogs") {
       return pathname === "/my-changelogs";
     }
+
     return pathname === href;
   };
 
@@ -147,17 +148,17 @@ export function DevspaceSidebar({
           <div className="flex items-center gap-2">
             <div className="rounded-full flex items-center justify-center">
               <Image
-                width={250}
-                height={20}
-                src="/icon1.png"
                 alt="Logo"
                 className="w-10 h-10 dark:invert"
+                height={20}
+                src="/icon1.png"
+                width={250}
               />
             </div>
             <h1
               className={cn(
                 fontHeading.className,
-                "font-heading text-slate-900 text-lg pt-1 -tracking-tighter dark:text-slate-100"
+                "font-heading text-slate-900 text-lg pt-1 -tracking-tighter dark:text-slate-100",
               )}
             >
               Logtiles
@@ -166,10 +167,10 @@ export function DevspaceSidebar({
           {isMobile && onClose && (
             <Button
               isIconOnly
-              variant="light"
-              size="sm"
-              onClick={onClose}
               className="md:hidden"
+              size="sm"
+              variant="light"
+              onClick={onClose}
             >
               <X size={20} />
             </Button>
@@ -183,16 +184,17 @@ export function DevspaceSidebar({
           {menuItems.map((item) => {
             const isActive = isActivePath(item.href);
             const IconComponent = item.icon;
+
             return (
               <li key={item.key}>
                 <button
-                  onClick={() => handleNavigation(item.href)}
                   className={cn(
                     "w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-3",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100",
                   )}
+                  onClick={() => handleNavigation(item.href)}
                 >
                   <IconComponent size={18} />
                   <span>{item.label}</span>
@@ -207,9 +209,9 @@ export function DevspaceSidebar({
       <div className="p-4 border-t border-slate-200 dark:border-slate-800 mt-auto flex flex-col gap-4">
         <Button
           isIconOnly
+          className="w-full h-10 border flex justify-between px-3 border-slate-200 dark:border-slate-700"
           variant="light"
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-          className="w-full h-10 border flex justify-between px-3 border-slate-200 dark:border-slate-700"
         >
           Switch to {theme === "light" ? "Dark" : "Light"} Mode
           {theme === "light" ? (

@@ -61,6 +61,7 @@ type CursorPayload = {
 
 async function getSessionUser(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
+
   return session?.user;
 }
 
@@ -96,7 +97,7 @@ function decodeCursor(cursor: string): CursorPayload | null {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ repoId?: string }> }
+  { params }: { params: Promise<{ repoId?: string }> },
 ) {
   try {
     const { repoId } = await params;
@@ -104,7 +105,7 @@ export async function GET(
     if (!repoId) {
       return NextResponse.json(
         { error: "Repository id is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -125,7 +126,7 @@ export async function GET(
     if (!repository) {
       return NextResponse.json(
         { error: "Repository not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -152,6 +153,7 @@ export async function GET(
     }
 
     const limitParamIndex = values.length + 1;
+
     values.push(limit + 1);
 
     const query = `
@@ -209,9 +211,10 @@ export async function GET(
     });
   } catch (error) {
     console.error("Failed to fetch repository changelogs", error);
+
     return NextResponse.json(
       { error: "Failed to fetch repository changelogs" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

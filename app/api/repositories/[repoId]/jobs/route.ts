@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { pushToChangelogJobQueue } from "./queue";
+
 import { auth, encryptToken } from "@/lib/auth";
 import pool from "@/lib/pg";
 import { getGithubAccessTokenForUser } from "@/lib/github";
-import { pushToChangelogJobQueue } from "./queue";
 
 const PROVIDER = "github";
 
@@ -61,12 +62,13 @@ type CreateJobRequest = {
 
 async function getSessionUser(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
+
   return session?.user;
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ repoId?: string }> }
+  { params }: { params: Promise<{ repoId?: string }> },
 ) {
   try {
     const { repoId } = await params;
@@ -74,7 +76,7 @@ export async function POST(
     if (!repoId) {
       return NextResponse.json(
         { error: "Repository id is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -95,7 +97,7 @@ export async function POST(
     if (!repository) {
       return NextResponse.json(
         { error: "Repository not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -104,7 +106,7 @@ export async function POST(
     if (!body.selectedCommits || !Array.isArray(body.selectedCommits)) {
       return NextResponse.json(
         { error: "selectedCommits is required and must be an array" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -162,13 +164,14 @@ export async function POST(
         jobId,
         message: "Job created successfully",
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Failed to create changelog job", error);
+
     return NextResponse.json(
       { error: "Failed to create changelog job" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

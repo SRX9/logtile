@@ -1,10 +1,10 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
+import NextTopLoader from "nextjs-toploader";
 
 import { Providers } from "./providers";
 import { ProtectedLayout } from "./protected-layout";
-import NextTopLoader from "nextjs-toploader";
 
 import { siteConfig } from "@/config/site";
 import { fontHeading, fontMono, fontSans } from "@/config/fonts";
@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en">
       <head>
-        <meta name="apple-mobile-web-app-title" content="Logtiles" />
+        <meta content="Logtiles" name="apple-mobile-web-app-title" />
       </head>
       <body
         className={clsx(
@@ -43,7 +43,7 @@ export default function RootLayout({
           fontSans.variable,
           fontSans.className,
           fontMono.variable,
-          fontHeading.variable
+          fontHeading.variable,
         )}
       >
         <NextTopLoader />

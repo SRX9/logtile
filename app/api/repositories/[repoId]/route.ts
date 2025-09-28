@@ -47,12 +47,13 @@ type DbRepository = {
 
 async function getSessionUser(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
+
   return session?.user;
 }
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ repoId?: string }> }
+  { params }: { params: Promise<{ repoId?: string }> },
 ) {
   try {
     const { repoId } = await params;
@@ -60,7 +61,7 @@ export async function GET(
     if (!repoId) {
       return NextResponse.json(
         { error: "Repository id is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -81,7 +82,7 @@ export async function GET(
     if (!repository) {
       return NextResponse.json(
         { error: "Repository not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -96,14 +97,14 @@ export async function GET(
           warning:
             "GitHub access token unavailable; live repository data not loaded.",
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
     const githubDetails = await fetchGithubRepositoryDetails(
       token,
       repository.owner,
-      repository.name
+      repository.name,
     );
 
     return NextResponse.json({
@@ -113,9 +114,10 @@ export async function GET(
     });
   } catch (error) {
     console.error("Failed to fetch repository details", error);
+
     return NextResponse.json(
       { error: "Failed to fetch repository details" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

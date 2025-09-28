@@ -1,14 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Skeleton } from "@heroui/skeleton";
-
-import { FinalChangelog } from "./FinalChangelog";
 import type {
   ChangelogTitle,
   FinalChangelogMetrics,
   JobStatus,
 } from "../types";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Skeleton } from "@heroui/skeleton";
+
+import { FinalChangelog } from "./FinalChangelog";
 
 type ChangelogApiResponse = {
   status: "pending" | "processing" | "completed" | "failed";
@@ -34,20 +35,27 @@ export function ChangelogTab({
   const fetchChangelog = useCallback(async () => {
     if (fetchPromiseRef.current) {
       const d = await fetchPromiseRef.current;
+
       setData(d);
       onStatusChange?.(d.status);
+
       return d;
     }
     const promise = (async () => {
       const res = await fetch(`/api/jobs/${jobId}/changelog`);
+
       if (!res.ok) throw new Error("Failed to load changelog");
+
       return (await res.json()) as ChangelogApiResponse;
     })();
+
     fetchPromiseRef.current = promise;
     try {
       const d = await promise;
+
       setData(d);
       onStatusChange?.(d.status);
+
       return d;
     } finally {
       fetchPromiseRef.current = null;
@@ -76,6 +84,7 @@ export function ChangelogTab({
 
     if (!isPending) {
       stopPolling();
+
       return;
     }
 
@@ -90,13 +99,16 @@ export function ChangelogTab({
       // Max 5 minutes
       const startedAt = pollingStartMsRef.current ?? Date.now();
       const elapsed = Date.now() - startedAt;
+
       if (elapsed >= 5 * 60 * 1000) {
         stopPolling();
+
         return;
       }
 
       try {
         const next = await fetchChangelog();
+
         if (next.status !== "pending" && next.status !== "processing") {
           stopPolling();
         }
@@ -127,10 +139,10 @@ export function ChangelogTab({
           <PendingMessage />
         ) : (
           <FinalChangelog
-            markdown={data?.markdown ?? ""}
-            title={data?.title ?? null}
-            metrics={data?.metrics ?? null}
             jobId={jobId}
+            markdown={data?.markdown ?? ""}
+            metrics={data?.metrics ?? null}
+            title={data?.title ?? null}
           />
         )
       ) : (

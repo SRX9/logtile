@@ -1,6 +1,8 @@
-import { formatDateRange, formatDateTime } from "../utils";
 import type { JobDetails } from "../types";
+
 import { Card, CardBody } from "@heroui/card";
+
+import { formatDateRange, formatDateTime } from "../utils";
 
 type JobOverviewProps = {
   job: JobDetails;
@@ -8,7 +10,7 @@ type JobOverviewProps = {
 
 export function JobOverview({ job }: JobOverviewProps) {
   return (
-    <Card shadow="sm" className="p-4">
+    <Card className="p-4" shadow="sm">
       <CardBody>
         <header className="mb-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">

@@ -5,6 +5,7 @@ export function cleanAndParseJSON(jsonString: string): any {
 
   try {
     const repairedJSON = jsonrepair(cleaned);
+
     return JSON.parse(repairedJSON);
   } catch (error) {
     console.error("Error repairing and parsing JSON:", error);
@@ -20,6 +21,7 @@ function extractPartialData(jsonString: string): any {
 
   while ((match = keyValueRegex.exec(jsonString)) !== null) {
     const [, key, stringValue, arrayValue, objectValue] = match;
+
     if (stringValue) {
       result[key] = stringValue;
     } else if (arrayValue) {
@@ -43,8 +45,10 @@ function extractPartialData(jsonString: string): any {
 export const extractJsonObject = (jsonString: string) => {
   const startIndex = jsonString.indexOf("{");
   const endIndex = jsonString.lastIndexOf("}");
+
   if (startIndex !== -1 && endIndex !== -1) {
     const jsonObjectString = jsonString.substring(startIndex, endIndex + 1);
+
     return jsonObjectString;
   }
 
@@ -56,6 +60,7 @@ export const extractJsonObjectStartPoint = (jsonString: string) => {
 
   if (startIndex !== -1) {
     const jsonObjectString = jsonString.substring(startIndex);
+
     return jsonObjectString;
   }
 
@@ -68,6 +73,7 @@ export const finalContentExtraction = (shortlistJsonString: string) => {
   try {
     try {
       const levelZero = JSON.parse(shortlistJsonString);
+
       if (typeof levelZero === "object") {
         return levelZero;
       }
@@ -92,8 +98,10 @@ export const finalContentExtraction = (shortlistJsonString: string) => {
 
 export function keysToLowerCase(obj: any) {
   var newObj: any = {};
+
   Object.keys(obj).forEach(function (key) {
     newObj[key?.toLowerCase()] = obj[key];
   });
+
   return newObj;
 }

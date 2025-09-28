@@ -94,6 +94,7 @@ type GenerateOptionsResponse = {
 
 async function getSessionUser(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
+
   return session?.user ?? null;
 }
 
@@ -105,11 +106,13 @@ function getCommitIso(commit: GithubCommit | null | undefined) {
 
 function subtractDaysFromIso(iso: string, days: number) {
   const date = new Date(iso);
+
   if (Number.isNaN(date.getTime())) {
     return iso;
   }
 
   date.setUTCDate(date.getUTCDate() - days);
+
   return date.toISOString();
 }
 
@@ -135,7 +138,7 @@ function countUniqueContributors(commits: GithubCommit[]) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ repoId?: string }> }
+  { params }: { params: Promise<{ repoId?: string }> },
 ) {
   try {
     const { repoId } = await params;
@@ -143,7 +146,7 @@ export async function GET(
     if (!repoId) {
       return NextResponse.json(
         { error: "Repository id is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -164,7 +167,7 @@ export async function GET(
     if (!repository) {
       return NextResponse.json(
         { error: "Repository not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -198,8 +201,9 @@ export async function GET(
       const details = await fetchGithubRepositoryDetails(
         token,
         repository.owner,
-        repository.name
+        repository.name,
       );
+
       defaultBranch = details.default_branch ?? defaultBranch;
     } catch (error) {
       console.error("Failed to fetch GitHub repository details", error);
@@ -209,7 +213,7 @@ export async function GET(
     if (!defaultBranch) {
       defaultBranch = "main";
       warningMessages.push(
-        "Default branch not set; assuming 'main' for commit comparisons."
+        "Default branch not set; assuming 'main' for commit comparisons.",
       );
     }
 
@@ -220,12 +224,12 @@ export async function GET(
         token,
         repository.owner,
         repository.name,
-        defaultBranch
+        defaultBranch,
       );
     } catch (error) {
       console.error("Failed to fetch latest commit for repository", error);
       warningMessages.push(
-        "Unable to load the latest commit for the repository."
+        "Unable to load the latest commit for the repository.",
       );
     }
 
@@ -243,7 +247,7 @@ export async function GET(
       tags = await fetchGithubRepositoryTags(
         token,
         repository.owner,
-        repository.name
+        repository.name,
       );
     } catch (error) {
       console.error("Failed to fetch repository tags", error);
@@ -269,7 +273,7 @@ export async function GET(
           repository.owner,
           repository.name,
           baseRef,
-          headRef
+          headRef,
         );
 
         comparison = {
@@ -282,10 +286,12 @@ export async function GET(
 
         compare.commits.forEach((commit) => {
           const iso = getCommitIso(commit);
+
           if (!iso) {
             return;
           }
           const timestamp = new Date(iso).getTime();
+
           if (Number.isNaN(timestamp)) {
             return;
           }
@@ -299,7 +305,7 @@ export async function GET(
       } catch (error) {
         console.error("Failed to fetch commit comparison", error);
         warningMessages.push(
-          "Unable to compute commit preview between the selected references."
+          "Unable to compute commit preview between the selected references.",
         );
       }
     } else if (!normalizedTags.length) {
@@ -334,13 +340,14 @@ export async function GET(
             since: suggestedFrom,
             until: suggestedTo,
             perPage: 100,
-          }
+          },
         );
+
         commitsPreview = commits;
       } catch (error) {
         console.error("Failed to fetch commits preview", error);
         warningMessages.push(
-          "Unable to load commits in the suggested date range."
+          "Unable to load commits in the suggested date range.",
         );
       }
     }
@@ -373,9 +380,10 @@ export async function GET(
     return NextResponse.json(payload, { status: 200 });
   } catch (error) {
     console.error("Failed to load changelog generation options", error);
+
     return NextResponse.json(
       { error: "Failed to load changelog generation options" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

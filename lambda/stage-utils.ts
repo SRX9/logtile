@@ -1,14 +1,15 @@
 import axios from "axios";
+
 import { Stage1Result } from "./types";
 import { Stage2Result } from "./types";
 import { Stage3Result, Stage4Result } from "./types";
 import { query } from "./db";
 import { ChangelogJob } from "./types";
-import { CommitWithSummary } from "./types";
 import { CommitDetails } from "./types";
 
 export function buildStage1JobLog(stage1Result: Stage1Result) {
   const timestamp = new Date().toISOString();
+
   return {
     stage: "stage1",
     event: "completed",
@@ -27,7 +28,7 @@ export function buildOutputData(
   totalSelected: number,
   stage2Result?: Stage2Result,
   stage3Result?: Stage3Result,
-  stage4Result?: Stage4Result
+  stage4Result?: Stage4Result,
 ) {
   return {
     job: {
@@ -76,6 +77,7 @@ export function buildOutputData(
 
 export function buildStage2JobLog(stage2: Stage2Result) {
   const timestamp = new Date().toISOString();
+
   return {
     stage: "stage2",
     event: "completed",
@@ -89,6 +91,7 @@ export function buildStage2JobLog(stage2: Stage2Result) {
 
 export function buildStage3JobLog(stage3: Stage3Result) {
   const timestamp = new Date().toISOString();
+
   return {
     stage: "stage3",
     event: "completed",
@@ -101,6 +104,7 @@ export function buildStage3JobLog(stage3: Stage3Result) {
 
 export function buildStage4JobLog(stage4: Stage4Result) {
   const timestamp = new Date().toISOString();
+
   return {
     stage: "stage4",
     event: "completed",
@@ -113,49 +117,49 @@ export function buildStage4JobLog(stage4: Stage4Result) {
 export async function updateJobStatus(jobId: string, status: string) {
   await query(
     "UPDATE changelog_job SET status = $2, updated_at = NOW() WHERE id = $1",
-    [jobId, status]
+    [jobId, status],
   );
 }
 
 export async function appendJobLog(jobId: string, entry: unknown) {
   await query(
     "UPDATE changelog_job SET logs = logs || $2::jsonb, updated_at = NOW() WHERE id = $1",
-    [jobId, JSON.stringify([entry])]
+    [jobId, JSON.stringify([entry])],
   );
 }
 
 export async function saveStageResult(jobId: string, result: unknown) {
   await query(
     "UPDATE changelog_job SET stage_result = $2::jsonb, updated_at = NOW() WHERE id = $1",
-    [jobId, JSON.stringify(result)]
+    [jobId, JSON.stringify(result)],
   );
 }
 
 export async function saveFinalChangelogResult(jobId: string, result: unknown) {
   await query(
     "UPDATE changelog_job SET final_changelog_result = $2::jsonb, updated_at = NOW() WHERE id = $1",
-    [jobId, JSON.stringify(result)]
+    [jobId, JSON.stringify(result)],
   );
 }
 
 export async function saveOutputAndFinal(
   jobId: string,
   outputData: unknown,
-  finalResult: unknown
+  finalResult: unknown,
 ) {
   await query(
     "UPDATE changelog_job SET stage_result = $2::jsonb, final_changelog_result = $3::jsonb, updated_at = NOW() WHERE id = $1",
-    [jobId, JSON.stringify(outputData), JSON.stringify(finalResult)]
+    [jobId, JSON.stringify(outputData), JSON.stringify(finalResult)],
   );
 }
 
 export async function saveChangelogTitle(
   jobId: string,
-  changelogTitle: { title: string; version_number?: string; date: string }
+  changelogTitle: { title: string; version_number?: string; date: string },
 ) {
   await query(
     "UPDATE changelog_job SET changelog_title = $2::jsonb, updated_at = NOW() WHERE id = $1",
-    [jobId, JSON.stringify(changelogTitle)]
+    [jobId, JSON.stringify(changelogTitle)],
   );
 }
 
@@ -168,6 +172,7 @@ export function extractCommitShas(commits: any[]): {
 
   commits.forEach((commit) => {
     const sha = normalizeCommitSha(commit);
+
     if (sha && /^[a-f0-9]{40}$/i.test(sha)) {
       valid.add(sha.toLowerCase());
     } else if (sha) {
@@ -203,7 +208,7 @@ export async function fetchCommitDetails(
   owner: string,
   repo: string,
   sha: string,
-  token: string
+  token: string,
 ): Promise<CommitDetails> {
   const url = `https://api.github.com/repos/${owner}/${repo}/commits/${sha}`;
 

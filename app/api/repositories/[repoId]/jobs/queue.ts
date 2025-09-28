@@ -18,12 +18,13 @@ export const pushToChangelogJobQueue = async (job_id: string) => {
 
   try {
     const data = await sqs.sendMessage(params).promise();
+
     console.log(
-      `Successfully sent message to SQS queue. Job ID: ${job_id} Message ID: ${data.MessageId}`
+      `Successfully sent message to SQS queue. Job ID: ${job_id} Message ID: ${data.MessageId}`,
     );
   } catch (error: any) {
     console.error(
-      `Error sending message to SQS Changelog Job queue: ${error?.message}`
+      `Error sending message to SQS Changelog Job queue: ${error?.message}`,
     );
   }
 };

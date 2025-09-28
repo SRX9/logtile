@@ -74,7 +74,7 @@ export function parseChangelog(row: ChangelogRow): PublicChangelog | null {
 }
 
 export async function getPublicChangelog(
-  jobId: string
+  jobId: string,
 ): Promise<PublicChangelog> {
   const result = await pool.query<ChangelogRow>(selectChangelogQuery, [jobId]);
   const row = result.rows[0];
@@ -127,7 +127,7 @@ const selectRepoChangelogsQuery = `
 
 export async function getPublicRepoChangelogs(
   repoId: string,
-  limit = 50
+  limit = 50,
 ): Promise<PublicRepoChangelogItem[]> {
   const result = await pool.query<RepoChangelogRow>(selectRepoChangelogsQuery, [
     repoId,
@@ -138,6 +138,7 @@ export async function getPublicRepoChangelogs(
 
   for (const row of result.rows) {
     const parsed = parseChangelog(row);
+
     if (!parsed || !parsed.markdown) {
       continue;
     }
