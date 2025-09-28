@@ -1,10 +1,8 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Check, Copy } from "lucide-react";
-
-import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Streamdown as MarkdownRender } from "streamdown";
 
 import type { ChangelogTitle, FinalChangelogMetrics } from "../types";
@@ -15,6 +13,7 @@ type FinalChangelogProps = {
   markdown?: string | null;
   title?: ChangelogTitle | null;
   metrics?: FinalChangelogMetrics | null;
+  jobId: string;
 };
 
 type MetadataItem = {
@@ -27,8 +26,11 @@ export function FinalChangelog({
   markdown,
   title,
   metrics,
+  jobId,
 }: FinalChangelogProps) {
   const [isCopied, setIsCopied] = useState(false);
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
+  const [publicUrl, setPublicUrl] = useState<string | null>(null);
   const hasMarkdown = Boolean(markdown && markdown.trim().length > 0);
   const changelogDate = useMemo(() => title?.date, [title?.date]);
 
@@ -42,6 +44,31 @@ export function FinalChangelog({
       setIsCopied(false);
     }, 2000);
   }, [markdown]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (!jobId) {
+      setPublicUrl(null);
+      return;
+    }
+    setPublicUrl(`${window.location.origin}/changelog/${jobId}`);
+  }, [jobId]);
+
+  const onOpenPublicPage = useCallback(() => {
+    if (!publicUrl) return;
+    window.open(publicUrl, "_blank", "noopener,noreferrer");
+  }, [publicUrl]);
+
+  const onCopyPublicLink = useCallback(() => {
+    if (!publicUrl) return;
+    navigator.clipboard.writeText(publicUrl);
+    setIsLinkCopied(true);
+    setTimeout(() => {
+      setIsLinkCopied(false);
+    }, 2000);
+  }, [publicUrl]);
 
   const metadataItems = useMemo<MetadataItem[]>(() => {
     const items: MetadataItem[] = [];
@@ -67,9 +94,9 @@ export function FinalChangelog({
 
   return (
     <div className="space-y-8">
-      <header className="rounded-2xl   p-4 ">
+      <header className="rounded-2xl  ">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-6">
+          <div className="space-y-6 lg:flex-1 lg:min-w-0">
             <div className="space-y-3">
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
                 Release Overview
@@ -88,9 +115,25 @@ export function FinalChangelog({
             <MetadataGrid items={metadataItems} hasTitle={Boolean(title)} />
           </div>
           {hasMarkdown && (
-            <div className="flex-shrink-0">
+            <div className="flex flex-col gap-2  lg:flex-none">
               <Button
-                size="sm"
+                color="primary"
+                onClick={onOpenPublicPage}
+                isDisabled={!publicUrl}
+              >
+                View Changelog Page
+              </Button>
+              <Button
+                variant="bordered"
+                onClick={onCopyPublicLink}
+                isDisabled={!publicUrl}
+                startContent={
+                  isLinkCopied ? <Check size={16} /> : <Copy size={16} />
+                }
+              >
+                {isLinkCopied ? "Link Copied" : "Copy changelog URL"}
+              </Button>
+              <Button
                 variant="bordered"
                 onClick={onCopy}
                 startContent={

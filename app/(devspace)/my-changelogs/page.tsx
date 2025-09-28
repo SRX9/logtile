@@ -260,7 +260,7 @@ export default function MyChangelogsPage() {
                   </span>
                   <Button
                     size="sm"
-                    variant="light"
+                    variant="flat"
                     onPress={() => handleJobClick(job.id)}
                     endContent={<ChevronRight className="w-4 h-4" />}
                   >

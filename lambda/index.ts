@@ -29,7 +29,7 @@ export const handler = async (
   event: any
 ): Promise<{ status: string; output_file?: string }> => {
   try {
-    /*const eventData =
+    const eventData =
       typeof event === "string" ? JSON.parse(event) : event || {};
     const records = eventData.Records || [];
 
@@ -50,9 +50,9 @@ export const handler = async (
 
     if (!jobId) {
       throw new Error("No jobId provided in record body");
-    }*/
+    }
 
-    let jobId = "77bbf518-1d94-4c62-8421-19ef2f59e631";
+    // let jobId = "77bbf518-1d94-4c62-8421-19ef2f59e631";
 
     console.log(`Processing changelog job: ${jobId}`);
 

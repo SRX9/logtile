@@ -17,6 +17,8 @@ export function LogsTab({ jobId }: { jobId: string }) {
   const [loaded, setLoaded] = useState(false);
   const didInitRef = useRef(false);
   const fetchPromiseRef = useRef<Promise<LogsApiResponse> | null>(null);
+  const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollingStartMsRef = useRef<number | null>(null);
 
   const parseLogs = useCallback((logs: string[]): JobLogEntry[] => {
     const normalizeEntry = (raw: unknown): JobLogEntry => {
@@ -102,6 +104,52 @@ export function LogsTab({ jobId }: { jobId: string }) {
     didInitRef.current = true;
     fetchLogs().finally(() => setLoaded(true));
   }, [fetchLogs]);
+
+  // Start polling every 5s while pending; stop when status changes or after 5 minutes
+  useEffect(() => {
+    const isPending = status === "pending";
+
+    const stopPolling = () => {
+      if (pollingTimerRef.current) {
+        clearInterval(pollingTimerRef.current);
+        pollingTimerRef.current = null;
+      }
+      pollingStartMsRef.current = null;
+    };
+
+    if (!isPending) {
+      stopPolling();
+      return;
+    }
+
+    if (pollingTimerRef.current) {
+      return;
+    }
+
+    pollingStartMsRef.current = Date.now();
+
+    pollingTimerRef.current = setInterval(async () => {
+      const startedAt = pollingStartMsRef.current ?? Date.now();
+      const elapsed = Date.now() - startedAt;
+      if (elapsed >= 5 * 60 * 1000) {
+        stopPolling();
+        return;
+      }
+
+      try {
+        const next = await fetchLogs();
+        if (next.status !== "pending") {
+          stopPolling();
+        }
+      } catch {
+        // ignore transient errors, continue until cap is reached
+      }
+    }, 5000);
+
+    return () => {
+      stopPolling();
+    };
+  }, [status, fetchLogs]);
 
   const onRefresh = useCallback(async () => {
     if (isRefreshing) return;

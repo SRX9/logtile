@@ -68,7 +68,7 @@ function StatusState({ status }: { status: JobDetails["status"] }) {
           <div className="h-3 w-32 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
           <div className="h-3 w-24 animate-pulse rounded-full bg-slate-200/80 dark:bg-slate-700/80" />
         </div>
-        <p>Job is queued and waiting to start processing…</p>
+        <p>Loading...</p>
       </div>
     );
   }

@@ -5,13 +5,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { useUser } from "@/lib/context/UserContext";
 
 const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTE_PREFIXES = ["/changelog/"];
 
 export function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 
-  const isPublicRoute = PUBLIC_ROUTES.includes(pathname ?? "");
+  const currentPath = pathname ?? "";
+  const isPublicRoute =
+    PUBLIC_ROUTES.includes(currentPath) ||
+    PUBLIC_ROUTE_PREFIXES.some((prefix) => currentPath.startsWith(prefix));
 
   useEffect(() => {
     if (!isPublicRoute && !isLoading && !user) {

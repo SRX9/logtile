@@ -37,6 +37,7 @@ function buildSystemPrompt(): string {
     "Focus on user-facing impact and value; never describe internal implementation details.",
     "Follow the critical rules provided in the user prompt exactly.",
     "Return your response as a JSON object with 'markdown' and 'title' fields only.",
+    "Do not include any title or release header in the 'markdown'. The title is returned separately and must not appear in the markdown body.",
   ].join(" \n");
 }
 
@@ -54,6 +55,8 @@ function buildUserPrompt(
     "4. NEVER use phrases like 'refactored', 'migrated', 'restructured'",
     "5. NEVER mention specific technologies used internally",
     "6. FOCUS ONLY on what users can see, touch, or experience differently",
+    "7. Do NOT include any top-level document title or release header in the markdown.",
+    "8. Do NOT include version numbers or dates anywhere in the markdown.",
     "",
     "IMPORTANT: Return your response as a JSON object with two fields:",
     "- 'markdown': The complete changelog in Markdown format",
@@ -76,6 +79,7 @@ function buildUserPrompt(
     ),
     "CHANGELOG STRUCTURE:",
     [
+      "Start directly with the sections below. Do NOT include any top-level document title, release heading, version, or date in the markdown.",
       "### What's New",
       "[2-3 sentences highlighting the most impactful changes from a user's perspective]",
       "",
@@ -100,8 +104,8 @@ function buildUserPrompt(
     "- Write in second person, focusing on user benefits and outcomes.",
     "- Be specific about value but avoid implementation details or internal terminology.",
     "- If a section has no content, omit the header entirely.",
-    "- Use metadata.version when available; otherwise render the version as 'Unreleased'.",
-    "- Use metadata.dateRange (prefer the 'to' date, fallback to 'from') or today's date if none is provided. Format as YYYY-MM-DD.",
+    "- Do NOT include any top-level title, release name, version number, or date in the markdown body; those are handled separately.",
+    "- Begin the markdown with the first section heading (e.g., '### What's New') rather than a document title.",
     "- Integrate executive summary lines into the 'What's New' section, adapting wording as needed for clarity.",
     "- Keep bullets concise, user-focused, and free of prohibited terminology.",
     "- Ensure the Markdown is clean and well-structured with headings, bullet lists, and tables rendered properly without placeholders or artifacts.",
@@ -111,6 +115,7 @@ function buildUserPrompt(
     "- The title should be concise (5-10 words maximum)",
     "- It should capture the main theme of changes in this release",
     "- Focus on the most impactful changes from a user perspective",
+    "- Do not repeat the title inside the 'markdown' content.",
     "- Make it professional and user-focused",
   ].join("\n\n");
 }
