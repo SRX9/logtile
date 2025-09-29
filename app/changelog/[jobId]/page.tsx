@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { Streamdown as MarkdownRender } from "streamdown";
 
@@ -9,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 type Params = Promise<{ jobId?: string }>;
 
-export const revalidate = 10;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -19,6 +20,8 @@ export async function generateMetadata({
   const { jobId } = await params;
 
   if (!jobId) {
+    unstable_noStore();
+
     return {};
   }
 
@@ -40,6 +43,8 @@ export async function generateMetadata({
       },
     };
   } catch {
+    unstable_noStore();
+
     return {};
   }
 }
@@ -52,12 +57,21 @@ export default async function PublicChangelogPage({
   const { jobId } = await params;
 
   if (!jobId) {
+    unstable_noStore();
     notFound();
   }
 
-  const changelog = await getPublicChangelog(jobId);
+  let changelog: Awaited<ReturnType<typeof getPublicChangelog>>;
+
+  try {
+    changelog = await getPublicChangelog(jobId);
+  } catch {
+    unstable_noStore();
+    notFound();
+  }
 
   if (!changelog.markdown) {
+    unstable_noStore();
     notFound();
   }
 

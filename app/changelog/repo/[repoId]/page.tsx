@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Streamdown as MarkdownRender } from "streamdown";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 type Params = Promise<{ repoId?: string }>;
 
-export const revalidate = 10;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -20,6 +21,8 @@ export async function generateMetadata({
   const { repoId } = await params;
 
   if (!repoId) {
+    unstable_noStore();
+
     return {};
   }
 
@@ -38,6 +41,8 @@ export async function generateMetadata({
       twitter: { title, description },
     };
   } catch {
+    unstable_noStore();
+
     return {};
   }
 }
@@ -50,12 +55,22 @@ export default async function RepoChangelogPage({
   const { repoId } = await params;
 
   if (!repoId) {
+    unstable_noStore();
     notFound();
   }
 
-  const items = await getPublicRepoChangelogs(repoId, 100);
+  let items: Awaited<ReturnType<typeof getPublicRepoChangelogs>>;
+
+  try {
+    items = await getPublicRepoChangelogs(repoId, 100);
+  } catch {
+    unstable_noStore();
+    notFound();
+  }
 
   if (!items.length) {
+    unstable_noStore();
+
     return (
       <div className="min-h-screen bg-slate-50 py-16 px-4 text-slate-900">
         <div className="mx-auto max-w-3xl rounded-3xl bg-white/95 p-10 shadow-xl">
@@ -63,7 +78,7 @@ export default async function RepoChangelogPage({
             <h1
               className={cn(
                 fontHeading.className,
-                "text-3xl font-semibold tracking-tight",
+                "text-3xl font-semibold tracking-tight"
               )}
             >
               Official Changelog
@@ -94,7 +109,7 @@ export default async function RepoChangelogPage({
           <h1
             className={cn(
               fontHeading.className,
-              "text-2xl font-semibold tracking-tight",
+              "text-2xl font-semibold tracking-tight"
             )}
           >
             Changelog
@@ -121,7 +136,7 @@ export default async function RepoChangelogPage({
                 <h2
                   className={cn(
                     fontHeading.className,
-                    "text-2xl font-semibold tracking-tight",
+                    "text-2xl font-semibold tracking-tight"
                   )}
                 >
                   {item.title ?? "Changelog"}
