@@ -10,6 +10,7 @@ import { Clock3, GitBranch, Github, Shield } from "lucide-react";
 import { Chip } from "@heroui/chip";
 
 import { RepositoryConnectDrawer } from "./connect-repository-drawer";
+import { fontHeading } from "@/config/fonts";
 // removed reauthorize helper
 
 type ConnectedRepository = {
@@ -81,7 +82,9 @@ export default function MyRepositories() {
       <div className="w-full space-y-10">
         <div className="flex flex-col gap-6 border-b px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10 lg:py-8">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+            <h1
+              className={`${fontHeading.className} text-2xl font-semibold text-slate-900 dark:text-slate-100`}
+            >
               Connected Repositories
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -120,7 +123,7 @@ export default function MyRepositories() {
                 <Card
                   key={index}
                   aria-label="Loading repository"
-                  className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/60 bg-white/90 backdrop-blur-sm shadow-sm dark:border-slate-800/60 dark:bg-slate-900/65"
+                  className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/60  backdrop-blur-sm shadow-sm dark:border-slate-800/60 "
                 >
                   <CardHeader className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex flex-1 items-start gap-3">
@@ -160,7 +163,7 @@ export default function MyRepositories() {
                       className="h-4 w-32 rounded-lg"
                     />
                   </CardBody>
-                  <CardFooter className="flex flex-col gap-4 border-t border-slate-200/80 bg-slate-50/60 px-5 py-4 text-xs text-slate-500 dark:border-slate-800/60 dark:bg-slate-900/50 dark:text-slate-400 sm:flex-row sm:flex-wrap">
+                  <CardFooter className="flex flex-col gap-4 border-t border-slate-200/80  px-5 py-4 text-xs text-slate-500 dark:border-slate-800/60  dark:text-slate-400 sm:flex-row sm:flex-wrap">
                     {[0, 1, 2].map((detail) => (
                       <div key={detail} className="flex items-center gap-2.5">
                         <Skeleton
@@ -200,7 +203,9 @@ export default function MyRepositories() {
                   <GitBranch aria-hidden="true" className="h-8 w-8" />
                 </span>
               </div>
-              <h2 className="mt-8 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              <h2
+                className={`${fontHeading.className} mt-8 text-2xl font-semibold text-slate-900 dark:text-slate-100`}
+              >
                 No repositories connected yet
               </h2>
               <p className="mt-4 max-w-md text-sm text-slate-600 dark:text-slate-400">
@@ -232,7 +237,7 @@ export default function MyRepositories() {
                   className="group block h-full"
                   href={`/my-repositories/${repo.repo_id}`}
                 >
-                  <Card className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/60 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary-200/50 hover:shadow-lg dark:border-slate-800/60 dark:bg-slate-900/65 dark:hover:border-primary-500/30">
+                  <Card className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/60  backdrop-blur-sm shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary-200/50 hover:shadow-lg dark:border-slate-800/60  dark:hover:border-primary-500/30">
                     <CardHeader className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex items-center gap-3">
                         <div className="relative">
@@ -249,7 +254,9 @@ export default function MyRepositories() {
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <h2 className="text-base font-semibold pt-1 tracking-tight text-slate-900 transition-colors group-hover:text-blue-700 dark:text-slate-100 dark:group-hover:text-blue-100">
+                          <h2
+                            className={`${fontHeading.className} text-base font-semibold pt-1 tracking-tight text-slate-900 transition-colors group-hover:text-blue-700 dark:text-slate-100 dark:group-hover:text-blue-100`}
+                          >
                             {repo.full_name}
                           </h2>
                           <p className="text-xs text-slate-500 dark:text-slate-400">

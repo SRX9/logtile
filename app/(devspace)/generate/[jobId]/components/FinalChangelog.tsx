@@ -1,11 +1,37 @@
 "use client";
 
-import type { ChangelogTitle, FinalChangelogMetrics } from "../types";
+import type {
+  ChangelogTitle,
+  FinalChangelogMetrics,
+  JobStatus,
+} from "../types";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@heroui/button";
-import { Check, Copy } from "lucide-react";
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@heroui/dropdown";
+import {
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+} from "@heroui/drawer";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  ExternalLink,
+  Link,
+  Pencil,
+} from "lucide-react";
 import { Streamdown as MarkdownRender } from "streamdown";
+
+import { fontHeading } from "@/config/fonts";
 
 // TODO: Add optional generation log list for transparency in future iterations.
 
@@ -14,6 +40,12 @@ type FinalChangelogProps = {
   title?: ChangelogTitle | null;
   metrics?: FinalChangelogMetrics | null;
   jobId: string;
+  onResultUpdated?: (update: {
+    markdown: string;
+    metrics: FinalChangelogMetrics | null;
+    title: ChangelogTitle | null;
+    status?: JobStatus;
+  }) => void;
 };
 
 type MetadataItem = {
@@ -27,12 +59,29 @@ export function FinalChangelog({
   title,
   metrics,
   jobId,
+  onResultUpdated,
 }: FinalChangelogProps) {
   const [isCopied, setIsCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [markdownDraft, setMarkdownDraft] = useState(markdown ?? "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const saveMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   const hasMarkdown = Boolean(markdown && markdown.trim().length > 0);
   const changelogDate = useMemo(() => title?.date, [title?.date]);
+
+  const clearSaveMessage = useCallback(() => {
+    if (saveMessageTimerRef.current) {
+      clearTimeout(saveMessageTimerRef.current);
+      saveMessageTimerRef.current = null;
+    }
+    setSaveMessage(null);
+  }, []);
 
   const onCopy = useCallback(() => {
     if (!markdown) {
@@ -57,6 +106,20 @@ export function FinalChangelog({
     setPublicUrl(`${window.location.origin}/changelog/${jobId}`);
   }, [jobId]);
 
+  useEffect(() => {
+    if (!isEditOpen) {
+      setMarkdownDraft(markdown ?? "");
+    }
+  }, [isEditOpen, markdown]);
+
+  useEffect(() => {
+    return () => {
+      if (saveMessageTimerRef.current) {
+        clearTimeout(saveMessageTimerRef.current);
+      }
+    };
+  }, []);
+
   const onOpenPublicPage = useCallback(() => {
     if (!publicUrl) return;
     window.open(publicUrl, "_blank", "noopener,noreferrer");
@@ -70,6 +133,85 @@ export function FinalChangelog({
       setIsLinkCopied(false);
     }, 2000);
   }, [publicUrl]);
+
+  const onOpenEditor = useCallback(() => {
+    setMarkdownDraft(markdown ?? "");
+    setSaveError(null);
+    clearSaveMessage();
+    setIsEditOpen(true);
+  }, [markdown, clearSaveMessage]);
+
+  const onCloseEditor = useCallback(() => {
+    if (isSaving) return;
+    setIsEditOpen(false);
+    setSaveError(null);
+    setMarkdownDraft(markdown ?? "");
+  }, [isSaving, markdown]);
+
+  const onSaveMarkdown = useCallback(async () => {
+    if (!jobId) return;
+    if (!markdownDraft.trim().length) {
+      setSaveError("Markdown cannot be empty");
+
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/changelog`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ markdown: markdownDraft }),
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setSaveError(
+          (payload && typeof payload?.error === "string"
+            ? payload.error
+            : null) ?? "Failed to update changelog"
+        );
+
+        return;
+      }
+
+      const nextMarkdown =
+        payload && typeof payload?.markdown === "string"
+          ? payload.markdown
+          : markdownDraft;
+
+      onResultUpdated?.({
+        markdown: nextMarkdown,
+        metrics:
+          payload && Object.prototype.hasOwnProperty.call(payload, "metrics")
+            ? (payload.metrics as FinalChangelogMetrics | null)
+            : (metrics ?? null),
+        title:
+          payload && Object.prototype.hasOwnProperty.call(payload, "title")
+            ? (payload.title as ChangelogTitle | null)
+            : (title ?? null),
+        status: payload?.status,
+      });
+      setIsEditOpen(false);
+      setMarkdownDraft(nextMarkdown);
+      clearSaveMessage();
+      setSaveMessage("Changelog updated");
+      saveMessageTimerRef.current = setTimeout(() => {
+        setSaveMessage(null);
+        saveMessageTimerRef.current = null;
+      }, 3000);
+    } catch (error) {
+      console.error("Failed to update changelog markdown", error);
+      setSaveError("Failed to update changelog");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [jobId, markdownDraft, onResultUpdated, clearSaveMessage]);
 
   const metadataItems = useMemo<MetadataItem[]>(() => {
     const items: MetadataItem[] = [];
@@ -102,7 +244,9 @@ export function FinalChangelog({
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
                 Release Overview
               </p>
-              <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-50">
+              <h2
+                className={`${fontHeading.className} text-3xl font-semibold text-slate-900 dark:text-slate-50`}
+              >
                 {title?.title ?? "Changelog not ready yet"}
               </h2>
               {!title && (
@@ -116,33 +260,60 @@ export function FinalChangelog({
             <MetadataGrid hasTitle={Boolean(title)} items={metadataItems} />
           </div>
           {hasMarkdown && (
-            <div className="flex flex-col gap-2  lg:flex-none">
-              <Button
-                color="primary"
-                isDisabled={!publicUrl}
-                onClick={onOpenPublicPage}
-              >
-                View Changelog Page
-              </Button>
-              <Button
-                isDisabled={!publicUrl}
-                startContent={
-                  isLinkCopied ? <Check size={16} /> : <Copy size={16} />
-                }
-                variant="bordered"
-                onClick={onCopyPublicLink}
-              >
-                {isLinkCopied ? "Link Copied" : "Copy changelog URL"}
-              </Button>
-              <Button
-                startContent={
-                  isCopied ? <Check size={16} /> : <Copy size={16} />
-                }
-                variant="bordered"
-                onClick={onCopy}
-              >
-                {isCopied ? "Copied" : "Copy markdown"}
-              </Button>
+            <div className="flex flex-col gap-2 lg:flex-none">
+              <Dropdown placement="bottom-end">
+                <DropdownTrigger>
+                  <Button
+                    color="primary"
+                    endContent={<ChevronDown size={16} />}
+                    startContent={<Copy size={16} />}
+                    variant="solid"
+                  >
+                    Changelog actions
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Changelog actions" variant="flat">
+                  <DropdownItem
+                    key="edit"
+                    startContent={<Pencil size={16} />}
+                    onPress={onOpenEditor}
+                  >
+                    Edit changelog
+                  </DropdownItem>
+                  <DropdownItem
+                    key="view"
+                    isDisabled={!publicUrl}
+                    startContent={<ExternalLink size={16} />}
+                    onPress={onOpenPublicPage}
+                  >
+                    View changelog page
+                  </DropdownItem>
+                  <DropdownItem
+                    key="copy-link"
+                    isDisabled={!publicUrl}
+                    startContent={
+                      isLinkCopied ? <Check size={16} /> : <Link size={16} />
+                    }
+                    onPress={onCopyPublicLink}
+                  >
+                    {isLinkCopied ? "Link Copied" : "Copy changelog URL"}
+                  </DropdownItem>
+                  <DropdownItem
+                    key="copy-markdown"
+                    startContent={
+                      isCopied ? <Check size={16} /> : <Copy size={16} />
+                    }
+                    onPress={onCopy}
+                  >
+                    {isCopied ? "Copied" : "Copy markdown"}
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+              {saveMessage ? (
+                <p className="mt-1 text-xs font-medium text-emerald-600">
+                  {saveMessage}
+                </p>
+              ) : null}
             </div>
           )}
         </div>
@@ -157,6 +328,57 @@ export function FinalChangelog({
           <EmptyMarkdown />
         )}
       </section>
+
+      <Drawer
+        isOpen={isEditOpen}
+        placement="right"
+        size="3xl"
+        onClose={onCloseEditor}
+      >
+        <DrawerContent>
+          <DrawerHeader className="flex flex-col gap-1">
+            <h3
+              className={`${fontHeading.className} text-xl font-semibold text-slate-900 dark:text-slate-100`}
+            >
+              Edit changelog markdown
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Make updates to the generated markdown directly. Changes are
+              applied immediately on save.
+            </p>
+          </DrawerHeader>
+          <DrawerBody className="space-y-4">
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>Markdown preview is disabled in this editor.</span>
+              <span>{markdownDraft.length.toLocaleString()} characters</span>
+            </div>
+            <textarea
+              className="h-full w-full resize-vertical rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm text-slate-800 shadow-inner focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-slate-500 dark:focus:ring-slate-600"
+              disabled={isSaving}
+              spellCheck={false}
+              value={markdownDraft}
+              onChange={(event) => setMarkdownDraft(event.target.value)}
+            />
+            {saveError ? (
+              <p className="text-sm text-rose-600 dark:text-rose-400">
+                {saveError}
+              </p>
+            ) : null}
+          </DrawerBody>
+          <DrawerFooter className="flex items-center justify-between">
+            <Button variant="light" onPress={onCloseEditor}>
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              isLoading={isSaving}
+              onPress={onSaveMarkdown}
+            >
+              Save changes
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

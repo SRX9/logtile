@@ -3,6 +3,7 @@ import type { JobDetails } from "../types";
 import { Card, CardBody } from "@heroui/card";
 
 import { formatDateRange, formatDateTime } from "../utils";
+import { fontHeading } from "@/config/fonts";
 
 type JobOverviewProps = {
   job: JobDetails;
@@ -13,7 +14,9 @@ export function JobOverview({ job }: JobOverviewProps) {
     <Card className="p-4" shadow="sm">
       <CardBody>
         <header className="mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h2
+            className={`${fontHeading.className} text-lg font-semibold text-slate-900 dark:text-slate-100`}
+          >
             Job Overview
           </h2>
         </header>

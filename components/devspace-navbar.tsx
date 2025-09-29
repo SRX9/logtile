@@ -11,7 +11,15 @@ import {
   DropdownTrigger,
 } from "@heroui/dropdown";
 import { Navbar, NavbarContent, NavbarItem } from "@heroui/navbar";
-import { FolderOpen, FileText, X } from "lucide-react";
+import {
+  FolderOpen,
+  FileText,
+  X,
+  LayoutDashboard,
+  UserRound,
+  CreditCard,
+  BarChart3,
+} from "lucide-react";
 import { cn } from "@heroui/theme";
 import { useTheme } from "next-themes";
 
@@ -48,7 +56,7 @@ export function DevspaceNavbar() {
             <h1
               className={cn(
                 fontHeading.className,
-                "font-heading text-slate-900 text-xl pt-1 -tracking-tighter dark:text-slate-100",
+                "font-heading text-slate-900 text-xl pt-1 -tracking-tighter dark:text-slate-100"
               )}
             >
               Logtiles
@@ -104,7 +112,13 @@ export function DevspaceSidebar({
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
-  const menuItems = [
+  const primaryMenuItems = [
+    {
+      key: "overview",
+      label: "Overview",
+      href: "/overview",
+      icon: LayoutDashboard,
+    },
     {
       key: "repositories",
       label: "My Repositories",
@@ -117,7 +131,28 @@ export function DevspaceSidebar({
       href: "/my-changelogs",
       icon: FileText,
     },
-  ];
+  ] as const;
+
+  const secondaryMenuItems = [
+    {
+      key: "account",
+      label: "Account",
+      href: "/account",
+      icon: UserRound,
+    },
+    {
+      key: "billing",
+      label: "Billing",
+      href: "/billing",
+      icon: CreditCard,
+    },
+    {
+      key: "usage",
+      label: "Usage",
+      href: "/usage",
+      icon: BarChart3,
+    },
+  ] as const;
 
   const isActivePath = (href: string) => {
     if (href === "/my-repositories") {
@@ -126,6 +161,7 @@ export function DevspaceSidebar({
         pathname?.startsWith("/my-repositories/")
       );
     }
+
     if (href === "/my-changelogs") {
       return pathname === "/my-changelogs";
     }
@@ -158,7 +194,7 @@ export function DevspaceSidebar({
             <h1
               className={cn(
                 fontHeading.className,
-                "font-heading text-slate-900 text-lg pt-1 -tracking-tighter dark:text-slate-100",
+                "font-heading text-slate-900 text-lg pt-1 -tracking-tighter dark:text-slate-100"
               )}
             >
               Logtiles
@@ -181,7 +217,7 @@ export function DevspaceSidebar({
       {/* Navigation Menu */}
       <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-2">
-          {menuItems.map((item) => {
+          {primaryMenuItems.map((item) => {
             const isActive = isActivePath(item.href);
             const IconComponent = item.icon;
 
@@ -192,7 +228,33 @@ export function DevspaceSidebar({
                     "w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-3",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100",
+                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                  )}
+                  onClick={() => handleNavigation(item.href)}
+                >
+                  <IconComponent size={18} />
+                  <span>{item.label}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="my-6 border-t border-slate-200 dark:border-slate-800" />
+
+        <ul className="space-y-2">
+          {secondaryMenuItems.map((item) => {
+            const isActive = isActivePath(item.href);
+            const IconComponent = item.icon;
+
+            return (
+              <li key={item.key}>
+                <button
+                  className={cn(
+                    "w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-3",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                   )}
                   onClick={() => handleNavigation(item.href)}
                 >

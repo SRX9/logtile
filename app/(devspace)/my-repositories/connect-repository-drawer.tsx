@@ -13,6 +13,7 @@ import {
   DrawerFooter,
   DrawerHeader,
 } from "@heroui/drawer";
+import { fontHeading } from "@/config/fonts";
 
 type GithubRepositoryOption = {
   id: number;
@@ -173,7 +174,9 @@ export function RepositoryConnectDrawer({
     <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
       <DrawerContent>
         <DrawerHeader className="flex flex-col gap-1">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+          <h2
+            className={`${fontHeading.className} text-xl font-semibold text-slate-900 dark:text-slate-100`}
+          >
             Connect a Repository
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -299,7 +302,9 @@ export function RepositoryConnectDrawer({
                 >
                   <div className="flex flex-col gap-3 border-b border-slate-100 p-4 md:flex-row md:items-center md:justify-between dark:border-slate-800">
                     <div>
-                      <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                      <h3
+                        className={`${fontHeading.className} text-lg font-medium text-slate-900 dark:text-slate-100`}
+                      >
                         {repo.fullName}
                       </h3>
                       {repo.description && (

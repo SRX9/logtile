@@ -18,6 +18,7 @@ import {
 
 import { GithubIcon } from "@/components/icons";
 import { ChangelogJobSummary } from "@/types";
+import { fontHeading } from "@/config/fonts";
 
 type ChangelogJobsResponse = {
   jobs: ChangelogJobSummary[];
@@ -140,7 +141,9 @@ export default function MyChangelogsPage() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <FileClock className="w-7 h-7 text-slate-800 dark:text-slate-200" />
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+          <h1
+            className={`${fontHeading.className} text-3xl font-bold text-slate-900 dark:text-slate-100`}
+          >
             My Changelogs
           </h1>
         </div>
@@ -155,7 +158,9 @@ export default function MyChangelogsPage() {
             <div className="mx-auto mb-4 flex items-center justify-center h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800">
               <Layers className="h-6 w-6 text-slate-600 dark:text-slate-300" />
             </div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
+            <h2
+              className={`${fontHeading.className} text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2`}
+            >
               No changelog jobs yet
             </h2>
             <p className="text-slate-600 dark:text-slate-400 mb-4">
@@ -188,7 +193,9 @@ export default function MyChangelogsPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                          <h3
+                            className={`${fontHeading.className} text-lg font-semibold text-slate-900 dark:text-slate-100`}
+                          >
                             {job.changelog_title?.title ?? job.repo_full_name}
                           </h3>
                           {job.changelog_title?.version ? (
@@ -224,7 +231,7 @@ export default function MyChangelogsPage() {
                             <span className="inline-flex items-center gap-1">
                               <CalendarRangeIcon className="w-4 h-4" />
                               {new Date(
-                                job.changelog_title.date,
+                                job.changelog_title.date
                               ).toLocaleDateString("en-US", {
                                 year: "numeric",
                                 month: "short",

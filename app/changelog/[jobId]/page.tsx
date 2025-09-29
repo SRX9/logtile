@@ -73,7 +73,7 @@ export default async function PublicChangelogPage({
           <h1
             className={cn(
               fontHeading.className,
-              "text-4xl font-semibold tracking-tight",
+              "text-4xl font-semibold tracking-tight"
             )}
           >
             {changelog.title ?? "Changelog"}
@@ -82,7 +82,7 @@ export default async function PublicChangelogPage({
             <p
               className={cn(
                 fontHeading.className,
-                "mt-3 text-base text-slate-500",
+                "mt-3 text-base text-slate-500"
               )}
             >
               {changelog.subtitle}

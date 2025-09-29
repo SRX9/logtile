@@ -11,6 +11,7 @@ import { Skeleton } from "@heroui/skeleton";
 import { formatDateTime } from "../utils";
 
 import { LogMessage } from "./LogMessage";
+import { fontHeading } from "@/config/fonts";
 
 export function ProgressAndLogs({
   status,
@@ -29,7 +30,9 @@ export function ProgressAndLogs({
     <section className="">
       <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h2
+            className={`${fontHeading.className} text-lg font-semibold text-slate-900 dark:text-slate-100`}
+          >
             Progress & Logs
           </h2>
           {statusHint && (
@@ -112,7 +115,9 @@ function StatusState({ status }: { status: JobDetails["status"] }) {
             strokeWidth={2}
           />
         </svg>
-        <h3 className="mt-4 text-lg font-semibold text-emerald-700 dark:text-emerald-300">
+        <h3
+          className={`${fontHeading.className} mt-4 text-lg font-semibold text-emerald-700 dark:text-emerald-300`}
+        >
           Changelog ready!
         </h3>
         <p className="mt-1 text-sm text-emerald-700/80 dark:text-emerald-300/80">
@@ -138,7 +143,9 @@ function StatusState({ status }: { status: JobDetails["status"] }) {
             strokeWidth={2}
           />
         </svg>
-        <h3 className="mt-4 text-lg font-semibold text-rose-700 dark:text-rose-300">
+        <h3
+          className={`${fontHeading.className} mt-4 text-lg font-semibold text-rose-700 dark:text-rose-300`}
+        >
           Generation failed
         </h3>
         <p className="mt-1 text-sm text-rose-700/80 dark:text-rose-300/80">
@@ -155,11 +162,11 @@ function LogsList({ logs }: { logs: JobLogEntry[] }) {
   if (logs.length === 0) {
     return (
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            Activity Log
-          </h3>
-        </div>
+        <h3
+          className={`${fontHeading.className} text-sm font-semibold text-slate-700 dark:text-slate-300`}
+        >
+          Activity Log
+        </h3>
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
           <div className="space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -177,11 +184,11 @@ function LogsList({ logs }: { logs: JobLogEntry[] }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          Activity Log
-        </h3>
-      </div>
+      <h3
+        className={`${fontHeading.className} text-sm font-semibold text-slate-700 dark:text-slate-300`}
+      >
+        Activity Log
+      </h3>
 
       <ScrollShadow className="max-h-[50vh] rounded-lg border scrollbar-default border-slate-200 bg-slate-50 font-mono text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
         <div className="p-4">

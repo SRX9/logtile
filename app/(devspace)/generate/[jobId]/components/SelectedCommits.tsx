@@ -3,6 +3,7 @@
 import type { CommitMetadata } from "../types";
 
 import { formatDateTime, formatCommitMessage } from "../utils";
+import { fontHeading } from "@/config/fonts";
 
 export type SelectedCommitsProps = {
   commits: CommitMetadata[];
@@ -13,7 +14,9 @@ export function SelectedCommits({ commits }: SelectedCommitsProps) {
     <section className="px-1 pt-4">
       <header className="mb-5 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h2
+            className={`${fontHeading.className} text-lg font-semibold text-slate-900 dark:text-slate-100`}
+          >
             Selected Commits
           </h2>
           <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">

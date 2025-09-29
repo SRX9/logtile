@@ -5,6 +5,7 @@ import type { JobDetails } from "../types";
 import { Badge } from "@heroui/badge";
 
 import { getStatusBadgeVariant, getStatusColor } from "../utils";
+import { fontHeading } from "@/config/fonts";
 
 type JobHeaderProps = {
   jobId: string;
@@ -15,7 +16,9 @@ export function JobHeader({ jobId, job }: JobHeaderProps) {
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+        <h1
+          className={`${fontHeading.className} text-2xl font-semibold text-slate-900 dark:text-slate-100`}
+        >
           Changelog Generation
         </h1>
         <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-400">

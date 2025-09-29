@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@heroui/skeleton";
 
 import { FinalChangelog } from "./FinalChangelog";
+import { fontHeading } from "@/config/fonts";
 
 type ChangelogApiResponse = {
   status: "pending" | "processing" | "completed" | "failed";
@@ -143,6 +144,22 @@ export function ChangelogTab({
             markdown={data?.markdown ?? ""}
             metrics={data?.metrics ?? null}
             title={data?.title ?? null}
+            onResultUpdated={(update) => {
+              setData((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      markdown: update.markdown,
+                      metrics: update.metrics,
+                      title: update.title,
+                      status: update.status ?? prev.status,
+                    }
+                  : prev,
+              );
+              if (update.status) {
+                onStatusChange?.(update.status);
+              }
+            }}
           />
         )
       ) : (
@@ -193,7 +210,9 @@ function PendingMessage() {
   return (
     <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 py-16 text-center dark:border-slate-700 dark:bg-slate-900/40">
       <div className="mx-auto mb-6 h-12 w-12 animate-spin rounded-full border-4 border-slate-300 border-t-transparent dark:border-slate-700" />
-      <h3 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+      <h3
+        className={`${fontHeading.className} text-2xl font-semibold text-slate-900 dark:text-slate-100`}
+      >
         Changelog is being processed
       </h3>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">

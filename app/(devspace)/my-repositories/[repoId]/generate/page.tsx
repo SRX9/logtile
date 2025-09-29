@@ -30,6 +30,7 @@ import {
 } from "@internationalized/date";
 
 import { RepositoryBreadcrumbs } from "@/components/repository-breadcrumbs";
+import { fontHeading } from "@/config/fonts";
 
 const RANGE_MODE_OPTIONS = [
   {
@@ -678,7 +679,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
       />
 
       <div className="space-y-4">
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+        <h1
+          className={`${fontHeading.className} text-2xl font-semibold text-slate-900 dark:text-slate-100`}
+        >
           Generate Changelog
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -699,7 +702,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
           <section className="space-y-4">
             <div className="rounded-xl border border-slate-200  p-6 shadow-sm dark:border-slate-800 ">
               <div className="space-y-2">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                <h2
+                  className={`${fontHeading.className} text-lg font-semibold text-slate-900 dark:text-slate-100`}
+                >
                   1. Select Range
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -846,7 +851,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
               <div className="rounded-xl border border-slate-200  p-6 shadow-sm dark:border-slate-800 ">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    <h2
+                      className={`${fontHeading.className} text-lg font-semibold text-slate-900 dark:text-slate-100`}
+                    >
                       Processing overview
                     </h2>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -1007,7 +1014,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
       >
         <DrawerContent>
           <DrawerHeader className="flex flex-col gap-1">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <h2
+              className={`${fontHeading.className} text-lg font-semibold text-slate-900 dark:text-slate-100`}
+            >
               Commits in selected range
             </h2>
             {selectedDateRangeLabel && (
@@ -1128,7 +1137,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
               <ModalBody>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">
+                    <h3
+                      className={`${fontHeading.className} text-lg font-semibold mb-2`}
+                    >
                       Repository Details
                     </h3>
                     <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
@@ -1148,7 +1159,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">
+                    <h3
+                      className={`${fontHeading.className} text-lg font-semibold mb-2`}
+                    >
                       Selected Commits
                     </h3>
                     <ScrollShadow className="max-h-96 space-y-2">

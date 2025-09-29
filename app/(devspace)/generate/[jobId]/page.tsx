@@ -11,6 +11,7 @@ import { JobHeader } from "./components/JobHeader";
 import { ChangelogTab } from "./components/ChangelogTab";
 import { OverviewTab } from "./components/OverviewTab";
 import { LogsTab } from "./components/LogsTab";
+import { fontHeading } from "@/config/fonts";
 
 type GenerateJobPageProps = {
   params: Promise<{
@@ -69,7 +70,7 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
     } catch (err) {
       console.error("Failed to fetch header:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to load job header",
+        err instanceof Error ? err.message : "Failed to load job header"
       );
     } finally {
       setIsLoading(false);
@@ -127,7 +128,9 @@ export default function GenerateJobPage({ params }: GenerateJobPageProps) {
     return (
       <div className="max-w-4xl py-10 px-10">
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-          <h2 className="mb-2 text-lg font-semibold">Error</h2>
+          <h2 className={`${fontHeading.className} mb-2 text-lg font-semibold`}>
+            Error
+          </h2>
           <p>{error}</p>
         </div>
       </div>

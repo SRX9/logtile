@@ -16,6 +16,7 @@ import { RecentChangelogs } from "./components/RecentChangelogs";
 import { formatDate } from "./utils/date";
 
 import { RepositoryBreadcrumbs } from "@/components/repository-breadcrumbs";
+import { fontHeading } from "@/config/fonts";
 
 export default function RepositoryDetailsPage() {
   const params = useParams();
@@ -105,7 +106,7 @@ export default function RepositoryDetailsPage() {
 
         console.error(err);
         setError(
-          err instanceof Error ? err.message : "Failed to load repository",
+          err instanceof Error ? err.message : "Failed to load repository"
         );
       })
       .finally(() => {
@@ -203,7 +204,7 @@ export default function RepositoryDetailsPage() {
         }
 
         setChangelogError(
-          err instanceof Error ? err.message : "Failed to load changelogs",
+          err instanceof Error ? err.message : "Failed to load changelogs"
         );
       } finally {
         if (activeChangelogRequest.current === controller) {
@@ -217,7 +218,7 @@ export default function RepositoryDetailsPage() {
         }
       }
     },
-    [repoId],
+    [repoId]
   );
 
   const loadMoreChangelogs = useCallback(async () => {
@@ -403,7 +404,9 @@ export default function RepositoryDetailsPage() {
               />
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                  <h1
+                    className={`${fontHeading.className} text-xl font-semibold text-slate-900 dark:text-slate-100`}
+                  >
                     {repository.full_name}
                   </h1>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -456,7 +459,7 @@ export default function RepositoryDetailsPage() {
                   window.open(
                     `/changelog/repo/${repository.repo_id}`,
                     "_blank",
-                    "noopener,noreferrer",
+                    "noopener,noreferrer"
                   )
                 }
               >
@@ -473,7 +476,9 @@ export default function RepositoryDetailsPage() {
           <Card className="p-3 " shadow="sm">
             <CardBody className="space-y-5">
               <div>
-                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                <h2
+                  className={`${fontHeading.className} text-base font-semibold text-slate-900 dark:text-slate-100`}
+                >
                   Repository overview
                 </h2>
                 <p className="text-xs text-slate-600 dark:text-slate-400">
@@ -555,7 +560,9 @@ export default function RepositoryDetailsPage() {
             <Card className="p-3 " shadow="sm">
               <CardBody className="space-y-5">
                 <div>
-                  <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  <h2
+                    className={`${fontHeading.className} text-base font-semibold text-slate-900 dark:text-slate-100`}
+                  >
                     Activity snapshot
                   </h2>
                   <p className="text-xs text-slate-600 dark:text-slate-400">
@@ -594,7 +601,7 @@ export default function RepositoryDetailsPage() {
           window.open(
             `/changelog/repo/${repository.repo_id}`,
             "_blank",
-            "noopener,noreferrer",
+            "noopener,noreferrer"
           )
         }
       />

@@ -18,6 +18,8 @@ import {
 import { buildDateRangeLabel, formatDate } from "../utils/date";
 import { ChangelogMetadata, RepositoryChangelogResponse } from "../types";
 
+import { fontHeading } from "@/config/fonts";
+
 type RecentChangelogsProps = {
   changelogFeed: RepositoryChangelogResponse | null;
   isChangelogLoading: boolean;
@@ -220,7 +222,7 @@ export function RecentChangelogs({
                         <CalendarDays className="h-4 w-4" />
                         {buildDateRangeLabel(
                           item.date_range_start,
-                          item.date_range_end,
+                          item.date_range_end
                         )}
                       </span>
                     ) : null}
@@ -308,7 +310,9 @@ export function RecentChangelogs({
       <div className="space-y-5">
         <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            <h2
+              className={`${fontHeading.className} text-base font-semibold text-slate-900 dark:text-slate-100`}
+            >
               Recent changelogs
             </h2>
             <p className="text-xs text-slate-600 dark:text-slate-400">
