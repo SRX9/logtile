@@ -151,7 +151,7 @@ function isoStringToCalendarDate(iso: string | null | undefined) {
   return new CalendarDate(
     parsed.getFullYear(),
     parsed.getMonth() + 1,
-    parsed.getDate(),
+    parsed.getDate()
   );
 }
 
@@ -207,7 +207,7 @@ function formatProcessingTimeFromCommits(commitCount: number) {
     return "0 seconds";
   }
 
-  const totalSeconds = commitCount * 30;
+  const totalSeconds = commitCount * 120;
 
   if (totalSeconds < 60) {
     const roundedSeconds = Math.max(1, totalSeconds);
@@ -248,14 +248,14 @@ function useGenerateOptions(repoId: string | undefined) {
           `/api/repositories/${repoId}/generate-options`,
           {
             signal: controller.signal,
-          },
+          }
         );
 
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
 
           throw new Error(
-            body?.error ?? "Failed to load repository generate options",
+            body?.error ?? "Failed to load repository generate options"
           );
         }
 
@@ -277,7 +277,7 @@ function useGenerateOptions(repoId: string | undefined) {
         setError(
           err instanceof Error
             ? err.message
-            : "Failed to load repository generate options",
+            : "Failed to load repository generate options"
         );
       } finally {
         if (!cancelled) {
@@ -300,7 +300,7 @@ function useGenerateOptions(repoId: string | undefined) {
 export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
   const paramsPromise = useMemo(
     () => params ?? Promise.resolve<RouteParams>({ repoId: undefined }),
-    [params],
+    [params]
   );
 
   const resolvedParams = use<RouteParams>(paramsPromise);
@@ -316,21 +316,21 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
   const [selectedMode, setSelectedMode] = useState<RangeMode>("date");
   const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
   const [dateRange, setDateRange] = useState<RangeValue<DateValue> | null>(
-    null,
+    null
   );
   const [isCommitDrawerOpen, setIsCommitDrawerOpen] = useState(false);
   const [isLoadingCommits, setIsLoadingCommits] = useState(false);
   const [commitsError, setCommitsError] = useState<string | null>(null);
   const [commitSummaries, setCommitSummaries] = useState<CommitSummary[]>([]);
   const [deselectedCommitShas, setDeselectedCommitShas] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
   const fetchedRangeRef = useRef<{ since: string; until: string } | null>(null);
   const activeFetchControllerRef = useRef<AbortController | null>(null);
   const activeFetchRangeRef = useRef<{ since: string; until: string } | null>(
-    null,
+    null
   );
 
   const comparisonSummary = useMemo(() => data?.comparison ?? null, [data]);
@@ -340,7 +340,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
     }
 
     return commitSummaries.filter(
-      (commit) => !deselectedCommitShas.has(commit.sha),
+      (commit) => !deselectedCommitShas.has(commit.sha)
     );
   }, [commitSummaries, deselectedCommitShas]);
 
@@ -348,7 +348,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
   const estimatedProcessingTimeLabel = useMemo(
     () => formatProcessingTimeFromCommits(selectedCommitCount),
-    [selectedCommitCount],
+    [selectedCommitCount]
   );
 
   const handleRangeModeChange = useCallback((mode: RangeMode) => {
@@ -397,9 +397,9 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
       try {
         const response = await fetch(
           `/api/repositories/${repoId}/commits?since=${encodeURIComponent(
-            since,
+            since
           )}&until=${encodeURIComponent(until)}`,
-          { signal: controller.signal },
+          { signal: controller.signal }
         );
 
         if (!response.ok) {
@@ -427,7 +427,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
         console.error(err);
         setCommitsError(
-          err instanceof Error ? err.message : "Failed to load commits",
+          err instanceof Error ? err.message : "Failed to load commits"
         );
         setCommitSummaries([]);
         setDeselectedCommitShas(new Set());
@@ -442,7 +442,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
         }
       }
     },
-    [repoId],
+    [repoId]
   );
 
   useEffect(() => {
@@ -465,7 +465,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
   const selectedDateRangeLabel = useMemo(
     () => formatDateRange(dateRange),
-    [dateRange],
+    [dateRange]
   );
 
   const isDateRangeComplete = Boolean(dateRange?.start && dateRange?.end);
@@ -487,7 +487,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
   const hasFetchedCurrentRange = Boolean(
     currentIsoRange &&
       fetchedRangeRef.current?.since === currentIsoRange.since &&
-      fetchedRangeRef.current?.until === currentIsoRange.until,
+      fetchedRangeRef.current?.until === currentIsoRange.until
   );
 
   const shouldShowProcessingOverview =
@@ -525,7 +525,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
 
       void fetchCommits(range.start, range.end);
     },
-    [fetchCommits],
+    [fetchCommits]
   );
 
   const handleOpenCommitDrawer = useCallback(() => {
@@ -811,7 +811,7 @@ export default function RepositoryGeneratePage({ params }: GeneratePageProps) {
                                 {formatNumber(comparisonSummary.totalCommits)}{" "}
                                 commits,{" "}
                                 {formatNumber(
-                                  comparisonSummary.uniqueContributors,
+                                  comparisonSummary.uniqueContributors
                                 )}{" "}
                                 contributors)
                               </p>

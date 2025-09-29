@@ -27,7 +27,7 @@ type ConnectedRepository = {
 
 export default function MyRepositories() {
   const [connectedRepos, setConnectedRepos] = useState<ConnectedRepository[]>(
-    [],
+    []
   );
   const [isLoadingConnected, setIsLoadingConnected] = useState(true);
   const [connectedError, setConnectedError] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export default function MyRepositories() {
     } catch (error) {
       console.error(error);
       setConnectedError(
-        error instanceof Error ? error.message : "Failed to load repositories",
+        error instanceof Error ? error.message : "Failed to load repositories"
       );
     } finally {
       setIsLoadingConnected(false);
@@ -96,7 +96,7 @@ export default function MyRepositories() {
                 window.open(
                   "/api/github/org-access",
                   "_blank",
-                  "noopener,noreferrer",
+                  "noopener,noreferrer"
                 )
               }
             >
@@ -113,7 +113,7 @@ export default function MyRepositories() {
           </div>
         </div>
 
-        <section className="mx-auto w-full max-w-[1400px] px-4 pb-8 sm:px-6 lg:px-10">
+        <section className=" w-full max-w-[1400px] px-4 pb-8 sm:px-6 lg:px-10">
           {isLoadingConnected ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (

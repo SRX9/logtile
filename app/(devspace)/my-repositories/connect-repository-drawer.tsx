@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@heroui/button";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
+import { Input } from "@heroui/input";
+import { Search } from "lucide-react";
 // reauthorize removed per request
 import {
   Drawer,
@@ -43,6 +45,7 @@ export function RepositoryConnectDrawer({
   const [isLoadingAvailable, setIsLoadingAvailable] = useState(false);
   const [availableError, setAvailableError] = useState<string | null>(null);
   const [connectingRepoId, setConnectingRepoId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const hasFetchedAvailableRepos = useRef(false);
 
   const handleFetchAvailableRepos = useCallback(async () => {
@@ -73,7 +76,7 @@ export function RepositoryConnectDrawer({
       setAvailableError(
         error instanceof Error
           ? error.message
-          : "Failed to load GitHub repositories",
+          : "Failed to load GitHub repositories"
       );
     } finally {
       setIsLoadingAvailable(false);
@@ -128,13 +131,13 @@ export function RepositoryConnectDrawer({
         setAvailableError(
           error instanceof Error
             ? error.message
-            : "Failed to connect repository",
+            : "Failed to connect repository"
         );
       } finally {
         setConnectingRepoId(null);
       }
     },
-    [onRepositoryConnected],
+    [onRepositoryConnected]
   );
 
   const availableReposToDisplay = useMemo(() => {
@@ -142,12 +145,28 @@ export function RepositoryConnectDrawer({
       return [];
     }
 
-    return availableRepos.sort((a, b) => a.fullName.localeCompare(b.fullName));
-  }, [availableRepos]);
+    let filteredRepos = availableRepos.sort((a, b) =>
+      a.fullName.localeCompare(b.fullName)
+    );
+
+    // Only show search when there are more than 10 repositories
+    if (availableRepos.length > 10 && searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filteredRepos = filteredRepos.filter(
+        (repo) =>
+          repo.fullName.toLowerCase().includes(query) ||
+          repo.name.toLowerCase().includes(query) ||
+          repo.owner.toLowerCase().includes(query) ||
+          (repo.description && repo.description.toLowerCase().includes(query))
+      );
+    }
+
+    return filteredRepos;
+  }, [availableRepos, searchQuery]);
 
   const isRepoConnected = useCallback(
     (repoId: number | string) => connectedRepoIds.includes(String(repoId)),
-    [connectedRepoIds],
+    [connectedRepoIds]
   );
 
   return (
@@ -162,9 +181,60 @@ export function RepositoryConnectDrawer({
           </p>
         </DrawerHeader>
         <DrawerBody className="space-y-4">
+          {/* Search input - only show when more than 10 repositories */}
+          {!isLoadingAvailable && availableRepos.length > 10 && (
+            <div className="flex items-center gap-2">
+              <Input
+                className="flex-1"
+                placeholder="Search repositories..."
+                startContent={<Search className="h-4 w-4 text-slate-400" />}
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+              />
+              {searchQuery && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={() => setSearchQuery("")}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          )}
           {isLoadingAvailable ? (
-            <div className="flex h-40 items-center justify-center">
-              <Spinner label="Loading GitHub repositories" />
+            <div className="space-y-4">
+              {/* Search input skeleton */}
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 flex-1 rounded-lg" />
+                <Skeleton className="h-10 w-10 rounded-lg" />
+              </div>
+              {/* Repository cards skeleton */}
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
+                >
+                  <div className="flex flex-col gap-3 border-b border-slate-100 p-4 md:flex-row md:items-center md:justify-between dark:border-slate-800">
+                    <div className="space-y-2">
+                      <Skeleton className="h-6 w-48 rounded-lg" />
+                      <Skeleton className="h-4 w-64 rounded-lg" />
+                    </div>
+                    <Skeleton className="h-9 w-20 rounded-lg" />
+                  </div>
+                  <div className="grid gap-3 p-4">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-24 rounded" />
+                      <Skeleton className="h-4 w-16 rounded" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-20 rounded" />
+                      <Skeleton className="h-4 w-16 rounded" />
+                    </div>
+                    <Skeleton className="h-4 w-24 rounded" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : availableError ? (
             <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
@@ -185,7 +255,7 @@ export function RepositoryConnectDrawer({
                     window.open(
                       "/api/github/org-access",
                       "_blank",
-                      "noopener,noreferrer",
+                      "noopener,noreferrer"
                     )
                   }
                 >
@@ -196,8 +266,9 @@ export function RepositoryConnectDrawer({
           ) : !availableReposToDisplay.length ? (
             <div className="rounded-lg border border-dashed border-slate-200 p-6 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-400">
               <p>
-                No repositories available. Ensure your GitHub account has
-                accessible repositories.
+                {searchQuery
+                  ? `No repositories found matching "${searchQuery}".`
+                  : "No repositories available. Ensure your GitHub account has accessible repositories."}
               </p>
               <div className="mt-4 flex flex-col sm:flex-row gap-2">
                 {/* Reauthorize GitHub removed */}
@@ -209,7 +280,7 @@ export function RepositoryConnectDrawer({
                     window.open(
                       "/api/github/org-access",
                       "_blank",
-                      "noopener,noreferrer",
+                      "noopener,noreferrer"
                     )
                   }
                 >
