@@ -1,4 +1,4 @@
-# Greptile assignment: Logtiles - AI-Powered Changelog Generator
+# Logtiles - AI-Powered Changelog Generator
 
 Logtiles is an AI-powered tool that transforms commit history into clean, readable release notes in minutes
 #### Try at: https://logtile.vercel.app/
